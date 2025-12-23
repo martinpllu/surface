@@ -1105,19 +1105,21 @@
       };
 
       recognition.onresult = (event) => {
-        let interim = '';
-        let final = '';
+        let finalTranscript = '';
+        let interimTranscript = '';
 
+        // Only process from the last final result index
         for (let i = 0; i < event.results.length; i++) {
           const transcript = event.results[i][0].transcript;
           if (event.results[i].isFinal) {
-            final += transcript;
+            finalTranscript += transcript;
           } else {
-            interim += transcript;
+            interimTranscript = transcript; // Only use latest interim, not accumulated
           }
         }
 
-        currentTranscript = final + interim;
+        // Current transcript is finals + current interim
+        currentTranscript = finalTranscript + interimTranscript;
         console.log('Transcript:', currentTranscript);
         updateInterimDisplay(currentTranscript);
       };
