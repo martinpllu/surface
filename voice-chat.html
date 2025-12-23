@@ -502,6 +502,15 @@
       display: none;
     }
 
+    .version {
+      position: fixed;
+      top: 1.5rem;
+      left: 6rem;
+      font-size: 0.65rem;
+      color: var(--fg-muted);
+      z-index: 10;
+    }
+
     /* Modal */
     .modal-overlay {
       position: fixed;
@@ -681,6 +690,7 @@
 <body>
   <button class="logout-btn hidden" id="logoutBtn">Logout</button>
   <button class="settings-btn hidden" id="settingsBtn">Voice</button>
+  <span class="version">v3</span>
 
   <!-- Voice Settings Modal -->
   <div class="modal-overlay hidden" id="voiceModal">
@@ -1070,9 +1080,12 @@
       }
 
       recognition = new SpeechRecognition();
-      recognition.continuous = true;
+      // Continuous mode causes duplication issues on Android
+      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
+      recognition.continuous = !isMobile;
       recognition.interimResults = true;
       recognition.lang = 'en-US';
+      console.log('Speech recognition setup, continuous:', recognition.continuous, 'mobile:', isMobile);
 
       recognition.onstart = () => {
         console.log('Recognition started');
@@ -1105,22 +1118,19 @@
       };
 
       recognition.onresult = (event) => {
-        let finalTranscript = '';
-        let interimTranscript = '';
+        // On Android/mobile, results work differently than desktop
+        // Each result at index i is a separate phrase/segment
+        // We need to build transcript from all results, but only take
+        // the best alternative [0] from each
 
-        // Only process from the last final result index
+        let transcript = '';
+
         for (let i = 0; i < event.results.length; i++) {
-          const transcript = event.results[i][0].transcript;
-          if (event.results[i].isFinal) {
-            finalTranscript += transcript;
-          } else {
-            interimTranscript = transcript; // Only use latest interim, not accumulated
-          }
+          transcript += event.results[i][0].transcript;
         }
 
-        // Current transcript is finals + current interim
-        currentTranscript = finalTranscript + interimTranscript;
-        console.log('Transcript:', currentTranscript);
+        currentTranscript = transcript;
+        console.log('Transcript:', currentTranscript, 'Results:', event.results.length);
         updateInterimDisplay(currentTranscript);
       };
 
