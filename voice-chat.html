@@ -1143,6 +1143,8 @@
     }
 
     function startListening() {
+      console.log('startListening called, recognition:', !!recognition);
+
       if (!recognition) {
         showError('Speech recognition not available');
         return;
@@ -1155,7 +1157,14 @@
 
       isListening = true;
       currentTranscript = '';
-      recognition.start();
+
+      try {
+        recognition.start();
+        console.log('recognition.start() called');
+      } catch (e) {
+        console.error('Error starting recognition:', e);
+        showError('Error starting speech recognition: ' + e.message);
+      }
     }
 
     function interruptSpeaking() {
@@ -1516,7 +1525,10 @@ Respond naturally as if having a spoken conversation.`
       stopSpeechBtn.addEventListener('click', stopSpeaking);
 
       // Voice settings modal
-      settingsBtn.addEventListener('click', openVoiceSettings);
+      settingsBtn.addEventListener('click', () => {
+        console.log('Settings button clicked');
+        openVoiceSettings();
+      });
       modalClose.addEventListener('click', closeVoiceSettings);
       voiceModal.addEventListener('click', (e) => {
         if (e.target === voiceModal) closeVoiceSettings();
@@ -1556,14 +1568,27 @@ Respond naturally as if having a spoken conversation.`
         lastScrollTop = transcriptArea.scrollTop;
       });
 
-      controlBtn.addEventListener('click', () => {
-        if (controlBtn.classList.contains('disabled')) return;
+      controlBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        console.log('Control button clicked, isListening:', isListening);
+
+        if (controlBtn.classList.contains('disabled')) {
+          console.log('Button is disabled');
+          return;
+        }
 
         if (isListening) {
           stopListening();
         } else {
           startListening();
         }
+      });
+
+      // Also handle touch for mobile
+      controlBtn.addEventListener('touchend', (e) => {
+        e.preventDefault();
+        console.log('Control button touched');
+        controlBtn.click();
       });
 
       // Ensure voices are loaded
