@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Web Speech API Demo</title>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+      background: #1a1a2e;
+      color: #eee;
+      min-height: 100vh;
+    }
+    h1 {
+      text-align: center;
+      color: #fff;
+    }
+    .section {
+      background: #16213e;
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    h2 {
+      margin-top: 0;
+      color: #00d9ff;
+      font-size: 1.2rem;
+    }
+    button {
+      background: #0f3460;
+      color: #fff;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 1rem;
+      margin-right: 0.5rem;
+      margin-bottom: 0.5rem;
+      transition: background 0.2s;
+    }
+    button:hover {
+      background: #1a4a7a;
+    }
+    button:disabled {
+      background: #333;
+      cursor: not-allowed;
+    }
+    button.recording {
+      background: #e94560;
+      animation: pulse 1s infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.7; }
+    }
+    .output {
+      background: #0f0f23;
+      border-radius: 8px;
+      padding: 1rem;
+      margin-top: 1rem;
+      min-height: 60px;
+      font-family: monospace;
+      white-space: pre-wrap;
+    }
+    .status {
+      color: #888;
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+    .status.active {
+      color: #00ff88;
+    }
+    .status.error {
+      color: #e94560;
+    }
+    select, input[type="range"] {
+      background: #0f3460;
+      color: #fff;
+      border: none;
+      padding: 0.5rem;
+      border-radius: 4px;
+      margin-right: 0.5rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #aaa;
+    }
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    .control-group {
+      flex: 1;
+      min-width: 150px;
+    }
+    textarea {
+      width: 100%;
+      background: #0f0f23;
+      color: #fff;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 1rem;
+      font-size: 1rem;
+      resize: vertical;
+      min-height: 80px;
+    }
+    .browser-support {
+      background: #0f3460;
+      padding: 1rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    .supported { color: #00ff88; }
+    .unsupported { color: #e94560; }
+  </style>
+</head>
+<body>
+  <h1>🎤 Web Speech API Demo</h1>
+
+  <div class="browser-support">
+    <strong>Browser Support:</strong>
+    <span id="sttSupport"></span> Speech Recognition |
+    <span id="ttsSupport"></span> Speech Synthesis
+  </div>
+
+  <!-- Speech Recognition (STT) Section -->
+  <div class="section">
+    <h2>🎙️ Speech-to-Text (SpeechRecognition API)</h2>
+    <p>Click the button and speak. Your words will be transcribed in real-time.</p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Language</label>
+        <select id="sttLanguage">
+          <option value="en-US">English (US)</option>
+          <option value="en-GB">English (UK)</option>
+          <option value="es-ES">Spanish</option>
+          <option value="fr-FR">French</option>
+          <option value="de-DE">German</option>
+          <option value="ja-JP">Japanese</option>
+          <option value="zh-CN">Chinese (Mandarin)</option>
+        </select>
+      </div>
+      <div class="control-group">
+        <label>
+          <input type="checkbox" id="continuous" checked> Continuous listening
+        </label>
+        <label>
+          <input type="checkbox" id="interim" checked> Show interim results
+        </label>
+      </div>
+    </div>
+
+    <button id="startBtn">🎤 Start Listening</button>
+    <button id="stopBtn" disabled>⏹️ Stop</button>
+
+    <div class="status" id="sttStatus">Ready</div>
+    <div class="output" id="sttOutput">Transcription will appear here...</div>
+  </div>
+
+  <!-- Speech Synthesis (TTS) Section -->
+  <div class="section">
+    <h2>🔊 Text-to-Speech (SpeechSynthesis API)</h2>
+    <p>Type text below and click speak to hear it read aloud.</p>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>Voice</label>
+        <select id="voiceSelect"></select>
+      </div>
+      <div class="control-group">
+        <label>Rate: <span id="rateValue">1</span></label>
+        <input type="range" id="rate" min="0.5" max="2" step="0.1" value="1">
+      </div>
+      <div class="control-group">
+        <label>Pitch: <span id="pitchValue">1</span></label>
+        <input type="range" id="pitch" min="0.5" max="2" step="0.1" value="1">
+      </div>
+    </div>
+
+    <textarea id="ttsInput">Hello! This is a demo of the Web Speech API. It can convert text to natural-sounding speech right in your browser, with no server required.</textarea>
+
+    <div style="margin-top: 1rem;">
+      <button id="speakBtn">🔊 Speak</button>
+      <button id="pauseBtn" disabled>⏸️ Pause</button>
+      <button id="resumeBtn" disabled>▶️ Resume</button>
+      <button id="cancelBtn" disabled>⏹️ Stop</button>
+    </div>
+
+    <div class="status" id="ttsStatus">Ready</div>
+  </div>
+
+  <!-- Combined Demo -->
+  <div class="section">
+    <h2>🔄 Combined: Speak → Echo Back</h2>
+    <p>Click the button, say something, and the browser will repeat it back to you.</p>
+    <button id="echoBtn">🎤 Speak to Echo</button>
+    <div class="status" id="echoStatus">Ready</div>
+  </div>
+
+  <script>
+    // Check browser support
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    const speechSynthesis = window.speechSynthesis;
+
+    document.getElementById('sttSupport').innerHTML = SpeechRecognition
+      ? '<span class="supported">✓</span>'
+      : '<span class="unsupported">✗</span>';
+    document.getElementById('ttsSupport').innerHTML = speechSynthesis
+      ? '<span class="supported">✓</span>'
+      : '<span class="unsupported">✗</span>';
+
+    // ========== Speech Recognition (STT) ==========
+    let recognition = null;
+    if (SpeechRecognition) {
+      recognition = new SpeechRecognition();
+
+      const startBtn = document.getElementById('startBtn');
+      const stopBtn = document.getElementById('stopBtn');
+      const sttOutput = document.getElementById('sttOutput');
+      const sttStatus = document.getElementById('sttStatus');
+      const languageSelect = document.getElementById('sttLanguage');
+      const continuousCheck = document.getElementById('continuous');
+      const interimCheck = document.getElementById('interim');
+
+      let finalTranscript = '';
+
+      recognition.onstart = () => {
+        startBtn.disabled = true;
+        startBtn.classList.add('recording');
+        stopBtn.disabled = false;
+        sttStatus.textContent = '🔴 Listening... (speak now)';
+        sttStatus.className = 'status active';
+        console.log('Recognition started');
+      };
+
+      recognition.onaudiostart = () => {
+        console.log('Audio capturing started');
+        sttStatus.textContent = '🔴 Audio capturing...';
+      };
+
+      recognition.onsoundstart = () => {
+        console.log('Sound detected');
+        sttStatus.textContent = '🔴 Sound detected...';
+      };
+
+      recognition.onspeechstart = () => {
+        console.log('Speech detected');
+        sttStatus.textContent = '🔴 Speech detected...';
+      };
+
+      let isListening = false;
+
+      recognition.onend = () => {
+        // Auto-restart if continuous mode is enabled and we haven't manually stopped
+        if (continuousCheck.checked && isListening) {
+          recognition.start();
+          return;
+        }
+        isListening = false;
+        startBtn.disabled = false;
+        startBtn.classList.remove('recording');
+        stopBtn.disabled = true;
+        sttStatus.textContent = 'Stopped';
+        sttStatus.className = 'status';
+      };
+
+      startBtn.addEventListener('click', () => {
+        isListening = true;
+        finalTranscript = '';
+        sttOutput.textContent = '';
+
+        recognition.lang = languageSelect.value;
+        recognition.continuous = continuousCheck.checked;
+        recognition.interimResults = interimCheck.checked;
+
+        recognition.start();
+      });
+
+      stopBtn.addEventListener('click', () => {
+        isListening = false;
+        recognition.stop();
+      });
+
+      recognition.onresult = (event) => {
+        console.log('Got result:', event.results);
+        let interimTranscript = '';
+
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          const transcript = event.results[i][0].transcript;
+          const confidence = event.results[i][0].confidence;
+          console.log(`Transcript: "${transcript}" (confidence: ${confidence}, final: ${event.results[i].isFinal})`);
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
+        }
+
+        sttOutput.innerHTML = finalTranscript +
+          (interimTranscript ? `<span style="color: #666;">${interimTranscript}</span>` : '');
+      };
+
+      recognition.onerror = (event) => {
+        // 'no-speech' is not a real error, just restart if continuous
+        if (event.error === 'no-speech' && continuousCheck.checked) {
+          return; // Will auto-restart via onend handler
+        }
+        sttStatus.textContent = `Error: ${event.error}`;
+        sttStatus.className = 'status error';
+        startBtn.disabled = false;
+        startBtn.classList.remove('recording');
+        stopBtn.disabled = true;
+      };
+    } else {
+      document.getElementById('startBtn').disabled = true;
+      document.getElementById('sttStatus').textContent = 'Speech Recognition not supported in this browser';
+      document.getElementById('sttStatus').className = 'status error';
+    }
+
+    // ========== Speech Synthesis (TTS) ==========
+    const voiceSelect = document.getElementById('voiceSelect');
+    const rateSlider = document.getElementById('rate');
+    const pitchSlider = document.getElementById('pitch');
+    const rateValue = document.getElementById('rateValue');
+    const pitchValue = document.getElementById('pitchValue');
+    const speakBtn = document.getElementById('speakBtn');
+    const pauseBtn = document.getElementById('pauseBtn');
+    const resumeBtn = document.getElementById('resumeBtn');
+    const cancelBtn = document.getElementById('cancelBtn');
+    const ttsInput = document.getElementById('ttsInput');
+    const ttsStatus = document.getElementById('ttsStatus');
+
+    let voices = [];
+
+    function populateVoices() {
+      voices = speechSynthesis.getVoices();
+      voiceSelect.innerHTML = '';
+
+      voices.forEach((voice, index) => {
+        const option = document.createElement('option');
+        option.value = index;
+        option.textContent = `${voice.name} (${voice.lang})${voice.default ? ' — DEFAULT' : ''}`;
+        voiceSelect.appendChild(option);
+      });
+    }
+
+    // Voices load asynchronously in some browsers
+    populateVoices();
+    if (speechSynthesis.onvoiceschanged !== undefined) {
+      speechSynthesis.onvoiceschanged = populateVoices;
+    }
+
+    rateSlider.addEventListener('input', () => {
+      rateValue.textContent = rateSlider.value;
+    });
+
+    pitchSlider.addEventListener('input', () => {
+      pitchValue.textContent = pitchSlider.value;
+    });
+
+    function speak(text, onEnd = null) {
+      if (speechSynthesis.speaking) {
+        speechSynthesis.cancel();
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.voice = voices[voiceSelect.value];
+      utterance.rate = parseFloat(rateSlider.value);
+      utterance.pitch = parseFloat(pitchSlider.value);
+
+      utterance.onstart = () => {
+        ttsStatus.textContent = '🔊 Speaking...';
+        ttsStatus.className = 'status active';
+        pauseBtn.disabled = false;
+        cancelBtn.disabled = false;
+      };
+
+      utterance.onend = () => {
+        ttsStatus.textContent = 'Finished';
+        ttsStatus.className = 'status';
+        pauseBtn.disabled = true;
+        resumeBtn.disabled = true;
+        cancelBtn.disabled = true;
+        if (onEnd) onEnd();
+      };
+
+      utterance.onerror = (event) => {
+        ttsStatus.textContent = `Error: ${event.error}`;
+        ttsStatus.className = 'status error';
+      };
+
+      speechSynthesis.speak(utterance);
+    }
+
+    speakBtn.addEventListener('click', () => {
+      speak(ttsInput.value);
+    });
+
+    pauseBtn.addEventListener('click', () => {
+      speechSynthesis.pause();
+      ttsStatus.textContent = '⏸️ Paused';
+      pauseBtn.disabled = true;
+      resumeBtn.disabled = false;
+    });
+
+    resumeBtn.addEventListener('click', () => {
+      speechSynthesis.resume();
+      ttsStatus.textContent = '🔊 Speaking...';
+      pauseBtn.disabled = false;
+      resumeBtn.disabled = true;
+    });
+
+    cancelBtn.addEventListener('click', () => {
+      speechSynthesis.cancel();
+      ttsStatus.textContent = 'Cancelled';
+      ttsStatus.className = 'status';
+    });
+
+    // ========== Echo Demo ==========
+    const echoBtn = document.getElementById('echoBtn');
+    const echoStatus = document.getElementById('echoStatus');
+
+    if (recognition) {
+      echoBtn.addEventListener('click', () => {
+        const echoRecognition = new SpeechRecognition();
+        echoRecognition.lang = 'en-US';
+        echoRecognition.interimResults = false;
+
+        echoStatus.textContent = '🎤 Listening...';
+        echoStatus.className = 'status active';
+        echoBtn.disabled = true;
+
+        echoRecognition.start();
+
+        echoRecognition.onresult = (event) => {
+          const text = event.results[0][0].transcript;
+          echoStatus.textContent = `Heard: "${text}" — Now speaking...`;
+
+          speak(`You said: ${text}`, () => {
+            echoStatus.textContent = 'Ready';
+            echoStatus.className = 'status';
+            echoBtn.disabled = false;
+          });
+        };
+
+        echoRecognition.onerror = (event) => {
+          echoStatus.textContent = `Error: ${event.error}`;
+          echoStatus.className = 'status error';
+          echoBtn.disabled = false;
+        };
+
+        echoRecognition.onend = () => {
+          // If no result was captured
+          if (echoStatus.textContent === '🎤 Listening...') {
+            echoStatus.textContent = 'No speech detected';
+            echoStatus.className = 'status';
+            echoBtn.disabled = false;
+          }
+        };
+      });
+    } else {
+      echoBtn.disabled = true;
+    }
+  </script>
+</body>
+</html>
