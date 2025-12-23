@@ -793,6 +793,8 @@
     let speechQueue = [];
     let isSpeaking = false;
     let shouldStopSpeaking = false;
+    let spokenText = ''; // Track what was actually spoken
+    let fullResponseText = ''; // Track the full response
 
     // Auto-scroll state
     let userHasScrolled = false;
@@ -1146,9 +1148,45 @@
         return;
       }
 
+      // If AI is speaking, interrupt it
+      if (isSpeaking || speechQueue.length > 0) {
+        interruptSpeaking();
+      }
+
       isListening = true;
       currentTranscript = '';
       recognition.start();
+    }
+
+    function interruptSpeaking() {
+      const wasInterrupted = isSpeaking || speechQueue.length > 0;
+
+      shouldStopSpeaking = true;
+      speechQueue = [];
+      speechSynthesis.cancel();
+      isSpeaking = false;
+      stopSpeechBtn.classList.add('hidden');
+
+      // Update the last assistant message to show only what was spoken
+      if (wasInterrupted && spokenText && fullResponseText && spokenText !== fullResponseText) {
+        const lastAssistantMsg = [...document.querySelectorAll('.message.assistant')].pop();
+        if (lastAssistantMsg) {
+          const messageTextEl = lastAssistantMsg.querySelector('.message-text');
+          // Show what was spoken, plus indication of interruption
+          const interruptedHtml = parseMarkdown(spokenText.trim()) +
+            '<p><em style="color: var(--fg-muted);">[interrupted]</em></p>';
+          messageTextEl.innerHTML = interruptedHtml;
+
+          // Update conversation history with truncated response
+          if (conversationHistory.length > 0 &&
+              conversationHistory[conversationHistory.length - 1].role === 'assistant') {
+            conversationHistory[conversationHistory.length - 1].content =
+              spokenText.trim() + ' [interrupted by user]';
+          }
+        }
+      }
+
+      setStatus('ready', 'Ready');
     }
 
     function stopListening() {
@@ -1160,15 +1198,18 @@
         recognition.stop();
       }
 
-      if (currentTranscript.trim()) {
-        sendMessage(currentTranscript.trim());
-      } else {
-        setStatus('ready', 'Ready');
-      }
+      // Wait a short moment for final transcript to arrive
+      setTimeout(() => {
+        // Clear interim display
+        const interimEl = document.querySelector('.message.interim');
+        if (interimEl) interimEl.remove();
 
-      // Clear interim display
-      const interimEl = document.querySelector('.message.interim');
-      if (interimEl) interimEl.remove();
+        if (currentTranscript.trim()) {
+          sendMessage(currentTranscript.trim());
+        } else {
+          setStatus('ready', 'Ready');
+        }
+      }, 300);
     }
 
     function updateInterimDisplay(text) {
@@ -1201,6 +1242,8 @@
       // Reset speech state
       shouldStopSpeaking = false;
       speechQueue = [];
+      spokenText = '';
+      fullResponseText = '';
 
       try {
         const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
@@ -1296,6 +1339,7 @@ Respond naturally as if having a spoken conversation.`
               if (content) {
                 console.log('Content chunk:', content);
                 fullResponse += content;
+                fullResponseText = fullResponse; // Track for interruption
                 sentenceBuffer += content;
                 messageTextEl.innerHTML = parseMarkdown(fullResponse);
 
@@ -1371,7 +1415,8 @@ Respond naturally as if having a spoken conversation.`
       if (!text.trim() || shouldStopSpeaking) return;
       const sanitized = sanitizeForSpeech(text);
       if (!sanitized) return;
-      speechQueue.push(sanitized);
+      // Store original text (not sanitized) for tracking what was spoken
+      speechQueue.push({ sanitized, original: text });
       if (!isSpeaking) {
         processQueue();
       }
@@ -1388,7 +1433,11 @@ Respond naturally as if having a spoken conversation.`
       }
 
       isSpeaking = true;
-      const text = speechQueue.shift();
+      const item = speechQueue.shift();
+      const text = item.sanitized;
+
+      // Track what's being spoken (using original text for history)
+      spokenText += item.original + ' ';
 
       if (!window.speechSynthesis) {
         processQueue();
