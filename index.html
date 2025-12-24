@@ -371,6 +371,174 @@
       display: none;
     }
 
+    /* Search toggle */
+    .search-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.5rem 0.75rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      opacity: 0.7;
+    }
+
+    .search-toggle:hover {
+      opacity: 1;
+      border-color: var(--fg-muted);
+    }
+
+    .search-toggle.active {
+      opacity: 1;
+      border-color: var(--link);
+      background: rgba(61, 106, 153, 0.1);
+    }
+
+    .search-toggle svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--fg-muted);
+      stroke-width: 1.5;
+      fill: none;
+      transition: stroke 0.2s ease;
+    }
+
+    .search-toggle.active svg {
+      stroke: var(--link);
+    }
+
+    .search-toggle-label {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+      transition: color 0.2s ease;
+    }
+
+    .search-toggle.active .search-toggle-label {
+      color: var(--link);
+    }
+
+    .search-toggle.hidden {
+      display: none;
+    }
+
+    /* Right-side controls (text input button) */
+    .floating-right {
+      position: absolute;
+      left: calc(50% + 44px);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Text input bar */
+    .text-input-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: var(--surface);
+      border-top: 1px solid var(--border);
+      padding: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      z-index: 101;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .text-input-bar.open {
+      transform: translateY(0);
+    }
+
+    .text-input-bar input {
+      flex: 1;
+      height: 44px;
+      padding: 0 1rem;
+      border: 1px solid var(--border);
+      border-radius: 22px;
+      background: var(--bg);
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 1rem;
+      color: var(--fg);
+      outline: none;
+      transition: border-color 0.2s ease;
+    }
+
+    .text-input-bar input:focus {
+      border-color: var(--fg-muted);
+    }
+
+    .text-input-bar input::placeholder {
+      color: var(--fg-muted);
+      opacity: 0.6;
+    }
+
+    .text-input-bar .send-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: none;
+      background: var(--fg);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .text-input-bar .send-btn:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(45, 42, 36, 0.2);
+    }
+
+    .text-input-bar .send-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+      transform: none;
+    }
+
+    .text-input-bar .send-btn svg {
+      width: 20px;
+      height: 20px;
+      stroke: var(--bg);
+      stroke-width: 2;
+      fill: none;
+    }
+
+    .text-input-bar .close-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .text-input-bar .close-btn:hover {
+      border-color: var(--fg-muted);
+    }
+
+    .text-input-bar .close-btn svg {
+      width: 18px;
+      height: 18px;
+      stroke: var(--fg-muted);
+      stroke-width: 1.5;
+      fill: none;
+    }
+
     /* Cost Display - minimal footer */
     .cost-display {
       position: fixed;
@@ -887,6 +1055,14 @@
   <div class="floating-controls hidden" id="floatingControls">
     <!-- Left-side controls -->
     <div class="floating-left">
+      <!-- Search toggle (hidden when stop button shown) -->
+      <button class="search-toggle" id="searchToggle" title="Enable web search">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span class="search-toggle-label">Search</span>
+      </button>
       <!-- Stop speech button -->
       <button class="stop-speech-btn hidden" id="stopSpeechBtn">Stop</button>
     </div>
@@ -913,6 +1089,36 @@
         <div class="spinner-icon"></div>
       </button>
     </div>
+
+    <!-- Right-side controls -->
+    <div class="floating-right">
+      <!-- Text input button -->
+      <button class="float-btn" id="textInputBtn" title="Type message">
+        <svg viewBox="0 0 24 24">
+          <rect x="2" y="4" width="20" height="16" rx="2"/>
+          <line x1="6" y1="8" x2="18" y2="8"/>
+          <line x1="6" y1="12" x2="14" y2="12"/>
+          <line x1="6" y1="16" x2="10" y2="16"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- Text Input Bar -->
+  <div class="text-input-bar" id="textInputBar">
+    <button class="close-btn" id="textInputClose" title="Close">
+      <svg viewBox="0 0 24 24">
+        <line x1="18" y1="6" x2="6" y2="18"/>
+        <line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <input type="text" id="textInput" placeholder="Type your message..." autocomplete="off">
+    <button class="send-btn" id="textSendBtn" title="Send">
+      <svg viewBox="0 0 24 24">
+        <line x1="22" y1="2" x2="11" y2="13"/>
+        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
+      </svg>
+    </button>
   </div>
 
   <div class="error-toast" id="errorToast"></div>
@@ -933,19 +1139,13 @@
     // ============ Configuration ============
     const OPENROUTER_AUTH_URL = 'https://openrouter.ai/auth';
     const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1';
-    const NOTES_STORAGE_KEY = 'surface_notes';
     // Models that stream well: anthropic/claude-3-haiku, openai/gpt-4o-mini, google/gemini-3-flash-preview
     const MODEL = 'google/gemini-3-flash-preview';
     const MODEL_ONLINE = 'google/gemini-3-flash-preview:online';
 
-    function selectModel(text) {
-      const lowerText = text.toLowerCase();
-      if (lowerText.includes('please search') ||
-          lowerText.includes('please do a web search') ||
-          lowerText.includes('search the web') ||
-          lowerText.includes('look up') ||
-          lowerText.includes('search online')) {
-        console.log('Using online model for web search');
+    function getModel() {
+      if (webSearchEnabled) {
+        console.log('Using online model (web search enabled)');
         return MODEL_ONLINE;
       }
       return MODEL;
@@ -977,6 +1177,12 @@
     const voiceList = document.getElementById('voiceList');
     const controlBtn = document.getElementById('controlBtn');
     const stopSpeechBtn = document.getElementById('stopSpeechBtn');
+    const searchToggle = document.getElementById('searchToggle');
+    const textInputBtn = document.getElementById('textInputBtn');
+    const textInputBar = document.getElementById('textInputBar');
+    const textInput = document.getElementById('textInput');
+    const textSendBtn = document.getElementById('textSendBtn');
+    const textInputClose = document.getElementById('textInputClose');
     const emptyState = document.getElementById('emptyState');
     const transcriptArea = document.getElementById('transcriptArea');
     const waveform = document.getElementById('waveform');
@@ -987,6 +1193,9 @@
 
     // Selected voice (stored in localStorage)
     let selectedVoiceName = localStorage.getItem('selectedVoice') || null;
+
+    // Web search toggle (stored in localStorage)
+    let webSearchEnabled = localStorage.getItem('webSearchEnabled') === 'true';
 
     // Speech queue for streaming TTS
     let speechQueue = [];
@@ -1071,157 +1280,6 @@
       stats.latencies.push(latencyMs);
 
       logStats();
-    }
-
-    // ============ Notes Storage ============
-    function generateId() {
-      return crypto.randomUUID();
-    }
-
-    function loadNotes() {
-      try {
-        const stored = localStorage.getItem(NOTES_STORAGE_KEY);
-        return stored ? JSON.parse(stored) : [];
-      } catch (e) {
-        console.error('Error loading notes:', e);
-        return [];
-      }
-    }
-
-    function saveNotes(notes) {
-      try {
-        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
-      } catch (e) {
-        console.error('Error saving notes:', e);
-      }
-    }
-
-    function createNote(content, tags = [], dueDate = null) {
-      const notes = loadNotes();
-      const now = new Date().toISOString();
-      const note = {
-        id: generateId(),
-        content,
-        tags,
-        dueDate,
-        createdAt: now,
-        modifiedAt: now
-      };
-      notes.push(note);
-      saveNotes(notes);
-      console.log('Created note:', note);
-      return note;
-    }
-
-    function updateNote(id, updates) {
-      const notes = loadNotes();
-      const index = notes.findIndex(n => n.id === id);
-      if (index === -1) {
-        console.error('Note not found:', id);
-        return null;
-      }
-      notes[index] = {
-        ...notes[index],
-        ...updates,
-        modifiedAt: new Date().toISOString()
-      };
-      saveNotes(notes);
-      console.log('Updated note:', notes[index]);
-      return notes[index];
-    }
-
-    function deleteNote(id) {
-      const notes = loadNotes();
-      const index = notes.findIndex(n => n.id === id);
-      if (index === -1) {
-        console.error('Note not found:', id);
-        return false;
-      }
-      const deleted = notes.splice(index, 1)[0];
-      saveNotes(notes);
-      console.log('Deleted note:', deleted);
-      return true;
-    }
-
-    function queryNotes(filter = {}) {
-      let notes = loadNotes();
-
-      // Filter by tags
-      if (filter.tags && filter.tags.length > 0) {
-        notes = notes.filter(n =>
-          filter.tags.some(tag => n.tags.includes(tag))
-        );
-      }
-
-      // Filter by due date range
-      if (filter.dueBefore) {
-        const before = new Date(filter.dueBefore);
-        notes = notes.filter(n => n.dueDate && new Date(n.dueDate) <= before);
-      }
-      if (filter.dueAfter) {
-        const after = new Date(filter.dueAfter);
-        notes = notes.filter(n => n.dueDate && new Date(n.dueDate) >= after);
-      }
-
-      // Sort by due date (soonest first), then by creation date
-      notes.sort((a, b) => {
-        if (a.dueDate && b.dueDate) {
-          return new Date(a.dueDate) - new Date(b.dueDate);
-        }
-        if (a.dueDate) return -1;
-        if (b.dueDate) return 1;
-        return new Date(b.createdAt) - new Date(a.createdAt);
-      });
-
-      return notes;
-    }
-
-    function formatNotesForAI(notes) {
-      if (notes.length === 0) {
-        return 'No notes found.';
-      }
-
-      return notes.map((n, i) => {
-        let line = `${i + 1}. [${n.id.slice(0, 8)}] ${n.content}`;
-        if (n.tags.length > 0) {
-          line += ` (tags: ${n.tags.join(', ')})`;
-        }
-        if (n.dueDate) {
-          const due = new Date(n.dueDate);
-          line += ` (due: ${due.toLocaleDateString()})`;
-        }
-        return line;
-      }).join('\n');
-    }
-
-    function getNotesSummary() {
-      const notes = loadNotes();
-      if (notes.length === 0) {
-        return 'No notes stored.';
-      }
-
-      const tagCounts = {};
-      notes.forEach(n => {
-        n.tags.forEach(tag => {
-          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-        });
-      });
-
-      const tagSummary = Object.entries(tagCounts)
-        .map(([tag, count]) => `${count} ${tag}`)
-        .join(', ');
-
-      const withDueDate = notes.filter(n => n.dueDate).length;
-
-      let summary = `${notes.length} notes`;
-      if (tagSummary) {
-        summary += ` (${tagSummary})`;
-      }
-      if (withDueDate > 0) {
-        summary += `, ${withDueDate} with due dates`;
-      }
-
-      return summary;
     }
 
     // ============ Gemini Audio Recording ============
@@ -1396,7 +1454,7 @@
             'X-Title': 'Voice Chat'
           },
           body: JSON.stringify({
-            model: MODEL,
+            model: getModel(),
             stream: true,
             messages: [
               {
@@ -1462,6 +1520,7 @@
 
         setStatus('speaking', 'Speaking...');
         controlBtn.classList.remove('processing');
+        searchToggle.classList.add('hidden');
         stopSpeechBtn.classList.remove('hidden');
         userHasScrolled = false;
 
@@ -1533,21 +1592,18 @@
                 }
                 // If transcript not yet extracted, don't add to sentence buffer at all
 
-                messageTextEl.innerHTML = parseMarkdown(stripNoteActions(displayResponse));
+                messageTextEl.innerHTML = parseMarkdown(displayResponse);
 
                 if (!userHasScrolled) {
                   window.scrollTo(0, document.body.scrollHeight);
                 }
 
                 // Speak sentences (only from response, not transcript)
-                if (!sentenceBuffer.includes('<note-action>') || sentenceBuffer.includes('</note-action>')) {
-                  const cleanBuffer = stripNoteActions(sentenceBuffer);
-                  const sentenceMatch = cleanBuffer.match(/^(.*?[.!?])\s*/);
-                  if (sentenceMatch) {
-                    const sentence = sentenceMatch[1];
-                    sentenceBuffer = sentenceBuffer.slice(sentenceBuffer.indexOf(sentenceMatch[0]) + sentenceMatch[0].length);
-                    queueSpeech(sentence);
-                  }
+                const sentenceMatch = sentenceBuffer.match(/^(.*?[.!?])\s*/);
+                if (sentenceMatch) {
+                  const sentence = sentenceMatch[1];
+                  sentenceBuffer = sentenceBuffer.slice(sentenceBuffer.indexOf(sentenceMatch[0]) + sentenceMatch[0].length);
+                  queueSpeech(sentence);
                 }
               }
             } catch (e) {
@@ -1557,125 +1613,220 @@
         }
 
         // Speak remaining
-        const remainingToSpeak = stripNoteActions(sentenceBuffer.trim());
-        if (remainingToSpeak) {
-          queueSpeech(remainingToSpeak);
+        if (sentenceBuffer.trim()) {
+          queueSpeech(sentenceBuffer.trim());
         }
 
         // Log stats
         const latencyMs = Math.round(performance.now() - requestStartTime);
         updateStats(usage, latencyMs);
 
-        // Parse and handle note actions
-        // First strip the [USER]...[/USER] transcript tags, then note actions
+        // Debug: log full model response
+        console.log('=== FULL MODEL RESPONSE ===');
+        console.log(fullResponse);
+        console.log('=== END RESPONSE ===');
+
+        // Strip the [USER]...[/USER] transcript tags to get response only
         let responseOnly = fullResponse;
         const endTagIndex = fullResponse.indexOf('[/USER]');
         if (endTagIndex !== -1) {
           responseOnly = fullResponse.slice(endTagIndex + 7).trim();
         }
-        const actions = parseNoteActions(responseOnly);
-        const cleanResponse = stripNoteActions(responseOnly);
+        const cleanResponse = stripSpeechHints(responseOnly);
         messageTextEl.innerHTML = parseMarkdown(cleanResponse);
 
         // Use actual transcript in conversation history if we have it
         const userContent = userTranscript || '[voice message]';
 
-        // Handle read actions
-        const readAction = actions.find(a => a.action === 'read');
-        if (readAction) {
-          const notes = queryNotes(readAction.filter || {});
-          conversationHistory.push({ role: 'user', content: userContent });
-          await continueWithNotes(notes, cleanResponse, messageEl);
-        } else {
-          for (const action of actions) {
-            executeNoteAction(action);
-          }
-          // Add to conversation history
-          conversationHistory.push({ role: 'user', content: userContent });
-          conversationHistory.push({ role: 'assistant', content: cleanResponse });
-        }
+        // Add to conversation history
+        conversationHistory.push({ role: 'user', content: userContent });
+        conversationHistory.push({ role: 'assistant', content: cleanResponse });
 
       } catch (error) {
         console.error('Gemini audio API error:', error);
         showError(error.message);
         setStatus('ready', 'Ready');
         controlBtn.classList.remove('processing');
+        searchToggle.classList.remove('hidden');
         stopSpeechBtn.classList.add('hidden');
       }
     }
 
-    // ============ Note Action Parsing ============
-    function parseNoteActions(text) {
-      const actions = [];
-      const regex = /<note-action>([\s\S]*?)<\/note-action>/g;
-      let match;
+    // ============ Text Input Mode ============
+    async function sendTextMessage(text) {
+      if (!text.trim()) return;
 
-      while ((match = regex.exec(text)) !== null) {
-        try {
-          const action = JSON.parse(match[1]);
-          actions.push(action);
-        } catch (e) {
-          console.error('Failed to parse note action:', match[1], e);
+      const requestStartTime = performance.now();
+
+      // Reset speech state
+      shouldStopSpeaking = false;
+      speechQueue = [];
+      spokenText = '';
+      fullResponseText = '';
+
+      // Close text input bar
+      textInputBar.classList.remove('open');
+      textInput.value = '';
+
+      // Show processing state
+      controlBtn.classList.add('processing');
+
+      try {
+        // Select model based on text content
+        const selectedModel = getModel();
+
+        const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'Voice Chat'
+          },
+          body: JSON.stringify({
+            model: selectedModel,
+            stream: true,
+            messages: [
+              {
+                role: 'system',
+                content: buildSystemPrompt()
+              },
+              ...conversationHistory,
+              {
+                role: 'user',
+                content: text
+              }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'API request failed');
         }
-      }
 
-      return actions;
+        // Add user message
+        hideEmptyState();
+        addMessage('user', text);
+
+        // Create message element for streaming response
+        const messageEl = document.createElement('div');
+        messageEl.className = 'message assistant';
+        messageEl.innerHTML = `
+          <div class="message-label">AI</div>
+          <div class="message-text"></div>
+        `;
+        transcriptArea.appendChild(messageEl);
+        const messageTextEl = messageEl.querySelector('.message-text');
+
+        // Process stream
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = '';
+        let sentenceBuffer = '';
+        let buffer = '';
+        let usage = null;
+
+        setStatus('speaking', 'Speaking...');
+        controlBtn.classList.remove('processing');
+        searchToggle.classList.add('hidden');
+        stopSpeechBtn.classList.remove('hidden');
+        userHasScrolled = false;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+
+            const data = trimmedLine.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.usage) {
+                usage = parsed.usage;
+              }
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                fullResponse += content;
+                fullResponseText = fullResponse;
+                sentenceBuffer += content;
+                messageTextEl.innerHTML = parseMarkdown(fullResponse);
+
+                if (!userHasScrolled) {
+                  window.scrollTo(0, document.body.scrollHeight);
+                }
+
+                // Speak sentences
+                const sentenceMatch = sentenceBuffer.match(/^(.*?[.!?])\s*/);
+                if (sentenceMatch) {
+                  const sentence = sentenceMatch[1];
+                  sentenceBuffer = sentenceBuffer.slice(sentenceBuffer.indexOf(sentenceMatch[0]) + sentenceMatch[0].length);
+                  queueSpeech(sentence);
+                }
+              }
+            } catch (e) {
+              // Parse error, skip
+            }
+          }
+        }
+
+        // Speak any remaining text
+        if (sentenceBuffer.trim()) {
+          queueSpeech(sentenceBuffer.trim());
+        }
+
+        // Log stats
+        if (usage) {
+          const latency = Math.round(performance.now() - requestStartTime);
+          const cost = calculateCost(usage);
+          console.log(`Tokens: ${usage.prompt_tokens} in / ${usage.completion_tokens} out | Cost: $${cost.toFixed(6)} | Latency: ${latency}ms`);
+          updateCostDisplay(cost);
+        }
+
+        // Debug: log full model response
+        console.log('=== FULL MODEL RESPONSE ===');
+        console.log(fullResponse);
+        console.log('=== END RESPONSE ===');
+
+        // Clean response for display and history
+        const cleanResponse = stripSpeechHints(fullResponse);
+        messageTextEl.innerHTML = parseMarkdown(cleanResponse);
+
+        // Add to conversation history
+        conversationHistory.push({ role: 'user', content: text });
+        conversationHistory.push({ role: 'assistant', content: cleanResponse });
+
+      } catch (error) {
+        console.error('Text message API error:', error);
+        showError(error.message);
+        setStatus('ready', 'Ready');
+        controlBtn.classList.remove('processing');
+        searchToggle.classList.remove('hidden');
+        stopSpeechBtn.classList.add('hidden');
+      }
     }
 
-    function stripNoteActions(text) {
-      return text.replace(/<note-action>[\s\S]*?<\/note-action>/g, '').trim();
+    function openTextInput() {
+      textInputBar.classList.add('open');
+      textInput.focus();
     }
 
-    function executeNoteAction(action) {
-      console.log('Executing note action:', action);
-
-      switch (action.action) {
-        case 'create':
-          return createNote(action.content, action.tags || [], action.dueDate || null);
-
-        case 'update':
-          if (!action.id) {
-            console.error('Update action missing id');
-            return null;
-          }
-          // Find note by prefix match
-          const notes = loadNotes();
-          const noteToUpdate = notes.find(n => n.id.startsWith(action.id));
-          if (!noteToUpdate) {
-            console.error('Note not found for update:', action.id);
-            return null;
-          }
-          const updates = {};
-          if (action.content !== undefined) updates.content = action.content;
-          if (action.tags !== undefined) updates.tags = action.tags;
-          if (action.dueDate !== undefined) updates.dueDate = action.dueDate;
-          return updateNote(noteToUpdate.id, updates);
-
-        case 'delete':
-          if (!action.id) {
-            console.error('Delete action missing id');
-            return false;
-          }
-          const allNotes = loadNotes();
-          const noteToDelete = allNotes.find(n => n.id.startsWith(action.id));
-          if (!noteToDelete) {
-            console.error('Note not found for delete:', action.id);
-            return false;
-          }
-          return deleteNote(noteToDelete.id);
-
-        case 'read':
-          // Read actions are handled separately with follow-up API call
-          return queryNotes(action.filter || {});
-
-        default:
-          console.error('Unknown note action:', action.action);
-          return null;
-      }
+    function closeTextInput() {
+      textInputBar.classList.remove('open');
+      textInput.value = '';
     }
 
     function buildSystemPrompt() {
-      const notesSummary = getNotesSummary();
       const today = new Date().toLocaleDateString('en-US', {
         weekday: 'long',
         year: 'numeric',
@@ -1695,44 +1846,33 @@ Then provide your response after the closing tag. This transcription helps the u
 
 Expect occasional background noise or unclear speech. If something doesn't make sense, politely ask the user to repeat or confirm.
 
-OUTPUT: Your responses will be converted to speech via text-to-speech. Therefore:
+OUTPUT: Your responses are displayed as text AND converted to speech. Write naturally readable text, but when something needs to be spoken differently, add a speech hint in double brackets immediately after.
+
+SPEECH HINT FORMAT: text [[spoken version]]
+Examples:
+- "version 2.0 [[version two point oh]]"
+- "the /etc/config [[the etsy config]] directory"
+- "$49.99 [[forty-nine ninety-nine]]"
+- "NASA [[nasa]]" (acronyms that should be spoken as words)
+- "API [[A P I]]" (acronyms that should be spelled out)
+- "Dr. Smith [[Doctor Smith]]"
+
+Guidelines:
+- Use markdown freely for formatting (headers, bold, lists, code blocks) - it will be stripped for speech
+- Include URLs/links normally in text - they'll be removed for speech
+- Add [[speech hints]] for: version numbers, file paths, prices, technical identifiers, abbreviations, symbols
 - Keep responses concise and conversational
-- Never include URLs, links, or web addresses - describe the source instead
-- Avoid markdown formatting, bullet points, asterisks, or special characters
-- Don't use abbreviations that sound awkward when spoken (e.g., say "for example" not "e.g.")
-- Avoid excessive punctuation like ellipses or parenthetical asides
-- Use natural spoken language with clear sentence structure
-- Numbers should be written as words when short (e.g., "three" not "3")
-
-NOTES SYSTEM: You have access to the user's personal notes. Current status: ${notesSummary}.
-
-You can manage notes using action tags. These tags are processed by the system and will not be spoken aloud. Available actions:
-
-1. CREATE a note:
-<note-action>{"action":"create","content":"Note text here","tags":["todo"],"dueDate":"2025-01-15"}</note-action>
-Tags and dueDate are optional. Common tags: todo, reminder, idea, shopping, work, personal.
-
-2. READ notes (to see what notes exist):
-<note-action>{"action":"read"}</note-action>
-Or with filters:
-<note-action>{"action":"read","filter":{"tags":["todo"]}}</note-action>
-
-3. UPDATE a note (use the 8-character ID prefix from read results):
-<note-action>{"action":"update","id":"abc12345","content":"Updated text","tags":["done"]}</note-action>
-
-4. DELETE a note:
-<note-action>{"action":"delete","id":"abc12345"}</note-action>
-
-When the user mentions todos, reminders, things to remember, or asks about their notes, use the read action first to retrieve the current notes, then respond based on what you find.
-
-When the user asks you to remember something, add a todo, or set a reminder, create a note with appropriate tags.
+- Don't over-annotate common words - only add hints where pronunciation differs significantly
 
 Respond naturally as if having a spoken conversation.`;
     }
 
     // Simple markdown parser
     function parseMarkdown(text) {
-      return text
+      // First strip speech hints [[...]] for display
+      let cleaned = stripSpeechHints(text);
+
+      return cleaned
         // Escape HTML
         .replace(/&/g, '&amp;')
         .replace(/</g, '&lt;')
@@ -1774,6 +1914,15 @@ Respond naturally as if having a spoken conversation.`;
         .replace(/(<\/blockquote>)<\/p>/g, '$1');
     }
 
+    // ============ Search Toggle ============
+    function updateSearchToggleUI() {
+      if (webSearchEnabled) {
+        searchToggle.classList.add('active');
+      } else {
+        searchToggle.classList.remove('active');
+      }
+    }
+
     // ============ Initialization ============
     function init() {
       // Check for OAuth callback
@@ -1791,6 +1940,9 @@ Respond naturally as if having a spoken conversation.`;
       } else {
         showLoginScreen();
       }
+
+      // Initialize UI state
+      updateSearchToggleUI();
 
       setupEventListeners();
     }
@@ -2021,6 +2173,7 @@ Respond naturally as if having a spoken conversation.`;
       speechQueue = [];
       speechSynthesis.cancel();
       isSpeaking = false;
+      searchToggle.classList.remove('hidden');
       stopSpeechBtn.classList.add('hidden');
 
       // Update the last assistant message to show only what was spoken
@@ -2049,136 +2202,6 @@ Respond naturally as if having a spoken conversation.`;
       stopGeminiRecording();
     }
 
-    // ============ Chat API ============
-    async function continueWithNotes(notes, previousResponse, messageEl) {
-      const messageTextEl = messageEl.querySelector('.message-text');
-      const notesData = formatNotesForAI(notes);
-
-      // Add the previous response and notes context to conversation
-      conversationHistory.push({ role: 'assistant', content: previousResponse });
-      conversationHistory.push({
-        role: 'user',
-        content: `[SYSTEM: Here are the requested notes]\n${notesData}`
-      });
-
-      const followUpStartTime = performance.now();
-
-      try {
-        const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.origin,
-            'X-Title': 'Voice Chat'
-          },
-          body: JSON.stringify({
-            model: MODEL,
-            stream: true,
-            messages: [
-              { role: 'system', content: buildSystemPrompt() },
-              ...conversationHistory
-            ]
-          })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error?.message || 'API request failed');
-        }
-
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullResponse = previousResponse + ' ';
-        let sentenceBuffer = '';
-        let buffer = '';
-        let usage = null;
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          buffer += chunk;
-
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
-
-            const data = trimmedLine.slice(6);
-            if (data === '[DONE]') continue;
-
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.usage) {
-                usage = parsed.usage;
-              }
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                fullResponse += content;
-                fullResponseText = fullResponse;
-                sentenceBuffer += content;
-
-                // Update display (strip any action tags)
-                const cleanDisplay = stripNoteActions(fullResponse);
-                messageTextEl.innerHTML = parseMarkdown(cleanDisplay);
-
-                if (!userHasScrolled) {
-                  window.scrollTo(0, document.body.scrollHeight);
-                }
-
-                // Speak sentences (strip action tags)
-                const cleanBuffer = stripNoteActions(sentenceBuffer);
-                const sentenceMatch = cleanBuffer.match(/^(.*?[.!?])\s*/);
-                if (sentenceMatch) {
-                  const sentence = sentenceMatch[1];
-                  sentenceBuffer = sentenceBuffer.slice(sentenceBuffer.indexOf(sentenceMatch[0]) + sentenceMatch[0].length);
-                  queueSpeech(sentence);
-                }
-              }
-            } catch (e) {
-              // Parse error, skip
-            }
-          }
-        }
-
-        // Speak remaining
-        const remainingToSpeak = stripNoteActions(sentenceBuffer.trim());
-        if (remainingToSpeak) {
-          queueSpeech(remainingToSpeak);
-        }
-
-        // Log stats for follow-up call
-        const followUpLatencyMs = Math.round(performance.now() - followUpStartTime);
-        updateStats(usage, followUpLatencyMs);
-
-        // Parse any actions in the follow-up response
-        const actions = parseNoteActions(fullResponse);
-        const cleanResponse = stripNoteActions(fullResponse);
-
-        messageTextEl.innerHTML = parseMarkdown(cleanResponse);
-
-        // Execute non-read actions
-        for (const action of actions) {
-          if (action.action !== 'read') {
-            executeNoteAction(action);
-          }
-        }
-
-        // Update the last assistant message in history
-        conversationHistory.pop(); // Remove the [SYSTEM: notes] message
-        conversationHistory.pop(); // Remove the previous assistant message
-        conversationHistory.push({ role: 'assistant', content: cleanResponse });
-
-      } catch (error) {
-        console.error('API error in follow-up:', error);
-        showError(error.message);
-      }
-    }
-
     function addMessage(role, text) {
       const messageEl = document.createElement('div');
       messageEl.className = `message ${role}`;
@@ -2193,9 +2216,66 @@ Respond naturally as if having a spoken conversation.`;
       }
     }
 
+    // ============ Text Processing ============
+
+    // Strip [[speech hints]] for display - shows the readable text only
+    function stripSpeechHints(text) {
+      return text.replace(/\[\[([^\]]+)\]\]/g, '');
+    }
+
+    // Convert text to speech-friendly version - uses [[hints]] where available
+    function convertToSpeech(text) {
+      // First strip markdown formatting so we can match clean text
+      let result = text
+        .replace(/\*\*([^*]+)\*\*/g, '$1')  // bold
+        .replace(/\*([^*]+)\*/g, '$1')       // italic
+        .replace(/__([^_]+)__/g, '$1')       // bold
+        .replace(/_([^_]+)_/g, '$1');        // italic
+
+      // Process each [[hint]] and replace the appropriate number of preceding words
+      // Work backwards through the string to avoid index shifting issues
+      const hintRegex = /\[\[([^\]]+)\]\]/g;
+      let match;
+      const replacements = [];
+
+      while ((match = hintRegex.exec(result)) !== null) {
+        const hint = match[1];
+        const hintStart = match.index;
+        const hintEnd = hintStart + match[0].length;
+        const hintWordCount = hint.trim().split(/\s+/).length;
+
+        // Find the preceding text (before the [[)
+        const textBefore = result.slice(0, hintStart).trimEnd();
+        const wordsBefore = textBefore.split(/\s+/);
+
+        // Take the last N words where N = hint word count
+        const wordsToReplace = Math.min(hintWordCount, wordsBefore.length);
+        const replaceStart = textBefore.length - wordsBefore.slice(-wordsToReplace).join(' ').length;
+
+        replacements.push({
+          start: replaceStart,
+          end: hintEnd,
+          replacement: hint
+        });
+      }
+
+      // Apply replacements in reverse order
+      for (let i = replacements.length - 1; i >= 0; i--) {
+        const r = replacements[i];
+        result = result.slice(0, r.start) + r.replacement + result.slice(r.end);
+      }
+
+      return result;
+    }
+
     // ============ Text-to-Speech ============
     function sanitizeForSpeech(text) {
-      return text
+      // First, apply speech hints (use spoken versions)
+      let result = convertToSpeech(text);
+
+      return result
+        // Remove markdown headers
+        .replace(/^#{1,6}\s+/gm, '')
         // Convert markdown links [label](url) to just the label
         .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
         // Remove bare URLs
@@ -2205,8 +2285,15 @@ Respond naturally as if having a spoken conversation.`;
         .replace(/\*([^*]+)\*/g, '$1')
         .replace(/__([^_]+)__/g, '$1')
         .replace(/_([^_]+)_/g, '$1')
-        // Remove code backticks
+        // Remove code blocks
+        .replace(/```[\s\S]*?```/g, '')
+        // Remove inline code backticks
         .replace(/`([^`]+)`/g, '$1')
+        // Remove blockquotes
+        .replace(/^>\s*/gm, '')
+        // Convert list markers to natural pauses
+        .replace(/^[-*+]\s+/gm, ', ')
+        .replace(/^\d+\.\s+/gm, ', ')
         // Clean up extra whitespace
         .replace(/\s+/g, ' ')
         .trim();
@@ -2228,6 +2315,7 @@ Respond naturally as if having a spoken conversation.`;
         isSpeaking = false;
         if (shouldStopSpeaking || speechQueue.length === 0) {
           setStatus('ready', 'Ready');
+          searchToggle.classList.remove('hidden');
           stopSpeechBtn.classList.add('hidden');
         }
         return;
@@ -2307,6 +2395,7 @@ Respond naturally as if having a spoken conversation.`;
       speechSynthesis.cancel();
       isSpeaking = false;
       setStatus('ready', 'Ready');
+      searchToggle.classList.remove('hidden');
       stopSpeechBtn.classList.add('hidden');
     }
 
@@ -2318,6 +2407,13 @@ Respond naturally as if having a spoken conversation.`;
         logout();
       });
       stopSpeechBtn.addEventListener('click', stopSpeaking);
+
+      // Search toggle
+      searchToggle.addEventListener('click', () => {
+        webSearchEnabled = !webSearchEnabled;
+        localStorage.setItem('webSearchEnabled', webSearchEnabled);
+        updateSearchToggleUI();
+      });
 
       // Settings dropdown menu
       settingsMenuBtn.addEventListener('click', (e) => {
@@ -2341,6 +2437,22 @@ Respond naturally as if having a spoken conversation.`;
       modalClose.addEventListener('click', closeVoiceSettings);
       voiceModal.addEventListener('click', (e) => {
         if (e.target === voiceModal) closeVoiceSettings();
+      });
+
+      // Text input controls
+      textInputBtn.addEventListener('click', openTextInput);
+      textInputClose.addEventListener('click', closeTextInput);
+      textSendBtn.addEventListener('click', () => {
+        sendTextMessage(textInput.value);
+      });
+      textInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+          e.preventDefault();
+          sendTextMessage(textInput.value);
+        }
+        if (e.key === 'Escape') {
+          closeTextInput();
+        }
       });
 
       // Spacebar to start/stop listening
