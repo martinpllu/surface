@@ -6,7 +6,7 @@
   <title>Voice</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #f5f0e8;
@@ -28,54 +28,45 @@
       box-sizing: border-box;
     }
 
-    html, body {
+    html {
       height: 100%;
-      overflow: hidden;
     }
 
     body {
-      font-family: 'IBM Plex Mono', monospace;
-      background: linear-gradient(135deg, var(--bg) 0%, var(--bg-warm) 100%);
+      font-family: 'Source Serif 4', Georgia, serif;
+      background: var(--bg);
       color: var(--fg);
+      min-height: 100%;
+      line-height: 1.8;
+    }
+
+    /* Login Screen - centered */
+    .login-screen {
+      position: fixed;
+      inset: 0;
       display: flex;
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      min-height: 100dvh;
-      padding: 1.5rem;
-      position: relative;
-    }
-
-    .container {
-      position: relative;
-      z-index: 1;
-      width: 100%;
-      max-width: 480px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 3rem;
-    }
-
-    /* Login Screen */
-    .login-screen {
-      text-align: center;
       animation: fadeIn 0.6s ease-out;
+      background: var(--bg);
     }
 
     .login-screen h1 {
-      font-size: 2.5rem;
+      font-family: 'Source Serif 4', Georgia, serif;
+      font-size: 3.5rem;
       font-weight: 300;
-      letter-spacing: -0.02em;
+      letter-spacing: -0.03em;
       margin-bottom: 0.5rem;
       color: var(--fg);
     }
 
     .login-screen p {
+      font-family: 'IBM Plex Mono', monospace;
       color: var(--fg-muted);
-      font-size: 0.75rem;
+      font-size: 0.7rem;
       font-weight: 400;
-      letter-spacing: 0.08em;
+      letter-spacing: 0.12em;
       text-transform: uppercase;
       margin-bottom: 3rem;
     }
@@ -86,12 +77,12 @@
       border: none;
       padding: 1rem 2.5rem;
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.8rem;
+      font-size: 0.75rem;
       font-weight: 500;
       letter-spacing: 0.02em;
       cursor: pointer;
       transition: all 0.2s ease;
-      border-radius: 6px;
+      border-radius: 4px;
     }
 
     .login-btn:hover {
@@ -103,118 +94,63 @@
       transform: translateY(0);
     }
 
-    /* Chat Screen */
-    .chat-screen {
-      width: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 2rem;
-      animation: fadeIn 0.6s ease-out;
-    }
-
-    .chat-screen.hidden,
     .login-screen.hidden {
       display: none;
     }
 
-    /* Status indicator */
-    .status {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      font-size: 0.65rem;
-      font-weight: 500;
-      letter-spacing: 0.1em;
-      text-transform: uppercase;
-      color: var(--fg-muted);
-      padding: 0.5rem 1rem;
-      background: var(--surface);
-      border-radius: 20px;
-      border: 1px solid var(--border);
+    /* Chat Screen - full page scroll */
+    .chat-screen {
+      min-height: 100vh;
+      padding: 6rem 1.5rem 10rem;
+      animation: fadeIn 0.6s ease-out;
     }
 
-    .status-dot {
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--fg-muted);
-      transition: all 0.3s ease;
+    .chat-screen.hidden {
+      display: none;
     }
 
-    .status.listening .status-dot {
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent-soft);
-      animation: pulse 1.5s ease-in-out infinite;
-    }
-
-    .status.processing .status-dot {
-      background: #d4a054;
-      animation: pulse 0.8s ease-in-out infinite;
-    }
-
-    .status.speaking .status-dot {
-      background: var(--success);
-      animation: pulse 1s ease-in-out infinite;
-    }
-
-    @keyframes pulse {
-      0%, 100% { opacity: 1; transform: scale(1); }
-      50% { opacity: 0.5; transform: scale(1.2); }
-    }
-
-    /* Transcript display */
+    /* Transcript - the page itself */
     .transcript-area {
-      width: 100%;
-      min-height: 200px;
-      max-height: 55vh;
-      overflow-y: auto;
+      max-width: 600px;
+      margin: 0 auto;
       display: flex;
       flex-direction: column;
-      gap: 1.5rem;
-      padding: 1.5rem;
-      background: var(--surface);
-      border-radius: 12px;
-      border: 1px solid var(--border);
-      scrollbar-width: thin;
-      scrollbar-color: var(--border) transparent;
-    }
-
-    .transcript-area::-webkit-scrollbar {
-      width: 6px;
-    }
-
-    .transcript-area::-webkit-scrollbar-track {
-      background: transparent;
-    }
-
-    .transcript-area::-webkit-scrollbar-thumb {
-      background: var(--border);
-      border-radius: 3px;
+      gap: 2.5rem;
     }
 
     .message {
-      animation: slideUp 0.3s ease-out;
+      animation: slideUp 0.4s ease-out;
     }
 
     .message-label {
+      font-family: 'IBM Plex Mono', monospace;
       font-size: 0.6rem;
-      font-weight: 600;
-      letter-spacing: 0.12em;
+      font-weight: 500;
+      letter-spacing: 0.15em;
       text-transform: uppercase;
       color: var(--fg-muted);
-      margin-bottom: 0.4rem;
+      margin-bottom: 0.6rem;
+      opacity: 0.7;
     }
 
     .message-text {
-      font-size: 0.9rem;
-      line-height: 1.7;
+      font-size: 1.25rem;
+      line-height: 1.85;
+      color: var(--fg);
+    }
+
+    .message.user .message-text {
+      color: var(--fg-muted);
+      font-style: italic;
+    }
+
+    .message.assistant .message-text {
       color: var(--fg);
     }
 
     /* Markdown rendering styles */
     .message-text p {
-      margin-bottom: 0.8em;
+      margin-bottom: 1em;
     }
 
     .message-text p:last-child {
@@ -232,7 +168,8 @@
     .message-text a {
       color: var(--link);
       text-decoration: underline;
-      text-underline-offset: 2px;
+      text-underline-offset: 3px;
+      text-decoration-thickness: 1px;
     }
 
     .message-text a:hover {
@@ -240,27 +177,31 @@
     }
 
     .message-text ul, .message-text ol {
-      margin: 0.5em 0;
+      margin: 0.75em 0;
       padding-left: 1.5em;
     }
 
     .message-text li {
-      margin-bottom: 0.3em;
+      margin-bottom: 0.4em;
     }
 
     .message-text code {
+      font-family: 'IBM Plex Mono', monospace;
       background: var(--bg-warm);
       padding: 0.15em 0.4em;
-      border-radius: 4px;
+      border-radius: 3px;
       font-size: 0.85em;
     }
 
     .message-text pre {
+      font-family: 'IBM Plex Mono', monospace;
       background: var(--bg-warm);
-      padding: 1em;
-      border-radius: 6px;
+      padding: 1.25em;
+      border-radius: 4px;
       overflow-x: auto;
-      margin: 0.8em 0;
+      margin: 1em 0;
+      font-size: 0.85rem;
+      line-height: 1.5;
     }
 
     .message-text pre code {
@@ -269,81 +210,94 @@
     }
 
     .message-text blockquote {
-      border-left: 3px solid var(--border);
-      padding-left: 1em;
-      margin: 0.8em 0;
-      color: var(--fg-muted);
-    }
-
-    .message.user .message-text {
-      color: var(--fg-muted);
-    }
-
-    .message.assistant .message-text {
-      color: var(--fg);
-    }
-
-    .message.interim .message-text {
+      border-left: 2px solid var(--border);
+      padding-left: 1.25em;
+      margin: 1em 0;
       color: var(--fg-muted);
       font-style: italic;
     }
 
-    .message.interim .message-label {
-      color: var(--accent);
-    }
-
     @keyframes slideUp {
-      from { opacity: 0; transform: translateY(10px); }
+      from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Main control button */
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Floating Controls */
+    .floating-controls {
+      position: fixed;
+      bottom: 2rem;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    .floating-controls > * {
+      pointer-events: auto;
+    }
+
+    .floating-controls.hidden {
+      display: none;
+    }
+
+    /* Left-side controls (spinner, stop) */
+    .floating-left {
+      position: absolute;
+      right: calc(50% + 44px);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    /* Main mic button */
     .control-btn {
-      width: 72px;
-      height: 72px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
-      border: 2px solid var(--border);
-      background: var(--surface);
+      border: none;
+      background: var(--fg);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-      position: relative;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 4px 20px rgba(45, 42, 36, 0.25);
     }
 
     .control-btn:hover {
-      background: var(--surface-hover);
-      border-color: var(--fg-muted);
-      transform: scale(1.05);
+      transform: scale(1.08);
+      box-shadow: 0 6px 28px rgba(45, 42, 36, 0.35);
     }
 
     .control-btn:active {
-      transform: scale(0.98);
+      transform: scale(0.96);
     }
 
     .control-btn.listening {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 3px var(--accent-soft), 0 4px 12px rgba(0,0,0,0.1);
+      background: var(--accent);
+      box-shadow: 0 4px 24px rgba(196, 90, 59, 0.4);
     }
 
     .control-btn.disabled {
-      opacity: 0.5;
+      opacity: 0.4;
       cursor: not-allowed;
     }
 
     .control-btn svg {
-      width: 28px;
-      height: 28px;
-      stroke: var(--fg);
-      stroke-width: 1.5;
+      width: 24px;
+      height: 24px;
+      stroke: var(--bg);
+      stroke-width: 1.75;
       fill: none;
-      transition: all 0.3s ease;
-    }
-
-    .control-btn.listening svg {
-      stroke: var(--accent);
+      transition: all 0.2s ease;
     }
 
     .control-btn .stop-icon {
@@ -358,53 +312,47 @@
       display: block;
     }
 
-    /* Waveform visualization */
-    .waveform {
+    /* Secondary floating buttons */
+    .float-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 3px;
-      height: 30px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
+      transition: all 0.2s ease;
+      opacity: 0.7;
     }
 
-    .waveform.active {
+    .float-btn:hover {
       opacity: 1;
+      border-color: var(--fg-muted);
+      transform: scale(1.05);
     }
 
-    .waveform-bar {
-      width: 3px;
-      height: 6px;
-      background: var(--accent);
-      border-radius: 2px;
-      transition: height 0.1s ease;
+    .float-btn svg {
+      width: 16px;
+      height: 16px;
+      stroke: var(--fg-muted);
+      stroke-width: 1.5;
+      fill: none;
     }
 
-    .waveform.active .waveform-bar {
-      animation: wave 0.8s ease-in-out infinite;
+    .float-btn:hover svg {
+      stroke: var(--fg);
     }
 
-    .waveform-bar:nth-child(1) { animation-delay: 0s; }
-    .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
-    .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
-    .waveform-bar:nth-child(4) { animation-delay: 0.3s; }
-    .waveform-bar:nth-child(5) { animation-delay: 0.4s; }
-
-    @keyframes wave {
-      0%, 100% { height: 6px; }
-      50% { height: 24px; }
-    }
-
-    /* Logout */
-    .logout-btn {
-      position: fixed;
-      top: 1.5rem;
-      right: 1.5rem;
+    /* Stop speech button - appears inline */
+    .stop-speech-btn {
+      height: 40px;
+      padding: 0 1rem;
+      border-radius: 20px;
+      border: 1px solid var(--accent);
       background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--fg-muted);
-      padding: 0.5rem 1rem;
+      color: var(--accent);
       font-family: 'IBM Plex Mono', monospace;
       font-size: 0.65rem;
       font-weight: 500;
@@ -412,33 +360,6 @@
       text-transform: uppercase;
       cursor: pointer;
       transition: all 0.2s ease;
-      z-index: 10;
-      border-radius: 6px;
-    }
-
-    .logout-btn:hover {
-      border-color: var(--fg-muted);
-      color: var(--fg);
-    }
-
-    .logout-btn.hidden {
-      display: none;
-    }
-
-    /* Stop speech button */
-    .stop-speech-btn {
-      background: var(--surface);
-      border: 1px solid var(--accent);
-      color: var(--accent);
-      padding: 0.5rem 1rem;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.7rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      margin-top: 0.75rem;
-      border-radius: 6px;
     }
 
     .stop-speech-btn:hover {
@@ -450,81 +371,26 @@
       display: none;
     }
 
-    /* Error toast */
-    .error-toast {
-      position: fixed;
-      bottom: 2rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(100px);
-      background: var(--surface);
-      border: 1px solid var(--accent);
-      padding: 1rem 1.5rem;
-      font-size: 0.8rem;
-      color: var(--accent);
-      opacity: 0;
-      transition: all 0.3s ease;
-      z-index: 100;
-      border-radius: 8px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-    }
-
-    .error-toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* Settings button */
-    .settings-btn {
-      position: fixed;
-      top: 1.5rem;
-      left: 1.5rem;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--fg-muted);
-      padding: 0.5rem 1rem;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.65rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s ease;
-      z-index: 10;
-      border-radius: 6px;
-    }
-
-    .settings-btn:hover {
-      border-color: var(--fg-muted);
-      color: var(--fg);
-    }
-
-    .settings-btn.hidden {
-      display: none;
-    }
-
-    .version {
-      position: fixed;
-      top: 1.5rem;
-      left: 6rem;
-      font-size: 0.65rem;
-      color: var(--fg-muted);
-      z-index: 10;
-    }
-
-    /* Cost Display */
+    /* Cost Display - minimal footer */
     .cost-display {
       position: fixed;
-      bottom: 1.5rem;
-      left: 1.5rem;
+      bottom: 1rem;
+      left: 1rem;
       display: flex;
-      flex-direction: column;
-      gap: 0.25rem;
+      gap: 1.5rem;
+      font-family: 'IBM Plex Mono', monospace;
       font-size: 0.6rem;
-      font-weight: 500;
-      letter-spacing: 0.03em;
+      font-weight: 400;
+      letter-spacing: 0.02em;
       color: var(--fg-muted);
+      opacity: 0.5;
       z-index: 10;
       font-variant-numeric: tabular-nums;
+      transition: opacity 0.2s ease;
+    }
+
+    .cost-display:hover {
+      opacity: 0.8;
     }
 
     .cost-display.hidden {
@@ -534,35 +400,53 @@
     .cost-row {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.4rem;
     }
 
     .cost-label {
       text-transform: uppercase;
       letter-spacing: 0.08em;
-      opacity: 0.7;
     }
 
     .cost-value {
       color: var(--fg);
-      font-weight: 600;
     }
 
     .cost-value.highlight {
       color: var(--accent);
-      animation: costPulse 0.6s ease-out;
     }
 
-    @keyframes costPulse {
-      0% { transform: scale(1.15); }
-      100% { transform: scale(1); }
+    /* Error toast */
+    .error-toast {
+      position: fixed;
+      bottom: 6rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      padding: 0.75rem 1.25rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 200;
+      border-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      pointer-events: none;
+    }
+
+    .error-toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
     }
 
     /* Modal */
     .modal-overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.4);
+      background: rgba(45, 42, 36, 0.4);
+      backdrop-filter: blur(4px);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -576,10 +460,10 @@
 
     .modal {
       background: var(--surface);
-      border-radius: 12px;
+      border-radius: 8px;
       width: 100%;
-      max-width: 500px;
-      max-height: 80vh;
+      max-width: 440px;
+      max-height: 70vh;
       display: flex;
       flex-direction: column;
       box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
@@ -589,24 +473,28 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
-      padding: 1rem 1.5rem;
+      padding: 1.25rem 1.5rem;
       border-bottom: 1px solid var(--border);
     }
 
     .modal-header h3 {
-      font-size: 0.9rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
       font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
       color: var(--fg);
     }
 
     .modal-close {
       background: none;
       border: none;
-      font-size: 1.5rem;
+      font-size: 1.25rem;
       color: var(--fg-muted);
       cursor: pointer;
       line-height: 1;
       padding: 0;
+      transition: color 0.15s ease;
     }
 
     .modal-close:hover {
@@ -621,23 +509,23 @@
     .voice-list {
       display: flex;
       flex-direction: column;
-      gap: 0.5rem;
+      gap: 0.4rem;
     }
 
     .voice-item {
       display: flex;
       align-items: center;
       gap: 0.75rem;
-      padding: 0.75rem 1rem;
+      padding: 0.65rem 0.9rem;
       background: var(--bg);
-      border: 1px solid var(--border);
-      border-radius: 8px;
+      border: 1px solid transparent;
+      border-radius: 4px;
       cursor: pointer;
       transition: all 0.15s ease;
     }
 
     .voice-item:hover {
-      border-color: var(--fg-muted);
+      background: var(--bg-warm);
     }
 
     .voice-item.selected {
@@ -646,9 +534,9 @@
     }
 
     .voice-item-radio {
-      width: 16px;
-      height: 16px;
-      border: 2px solid var(--border);
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--border);
       border-radius: 50%;
       display: flex;
       align-items: center;
@@ -662,8 +550,8 @@
 
     .voice-item.selected .voice-item-radio::after {
       content: '';
-      width: 8px;
-      height: 8px;
+      width: 6px;
+      height: 6px;
       background: var(--accent);
       border-radius: 50%;
     }
@@ -674,7 +562,8 @@
     }
 
     .voice-item-name {
-      font-size: 0.8rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
       font-weight: 500;
       color: var(--fg);
       white-space: nowrap;
@@ -683,20 +572,21 @@
     }
 
     .voice-item-lang {
-      font-size: 0.65rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
       color: var(--fg-muted);
-      margin-top: 0.15rem;
+      margin-top: 0.1rem;
     }
 
     .voice-item-preview {
       background: var(--surface);
       border: 1px solid var(--border);
       color: var(--fg-muted);
-      padding: 0.4rem 0.75rem;
+      padding: 0.35rem 0.6rem;
       font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.65rem;
+      font-size: 0.6rem;
       font-weight: 500;
-      border-radius: 4px;
+      border-radius: 3px;
       cursor: pointer;
       transition: all 0.15s ease;
       flex-shrink: 0;
@@ -707,38 +597,233 @@
       color: var(--fg);
     }
 
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
+    /* Waveform - subtle indicator */
+    .waveform {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 2px;
+      height: 24px;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: 0.5rem;
+    }
+
+    .waveform.active {
+      opacity: 1;
+    }
+
+    .waveform-bar {
+      width: 2px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 1px;
+      transition: height 0.1s ease;
+    }
+
+    .waveform.active .waveform-bar {
+      animation: wave 0.8s ease-in-out infinite;
+    }
+
+    .waveform-bar:nth-child(1) { animation-delay: 0s; }
+    .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
+    .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
+    .waveform-bar:nth-child(4) { animation-delay: 0.3s; }
+    .waveform-bar:nth-child(5) { animation-delay: 0.4s; }
+
+    @keyframes wave {
+      0%, 100% { height: 4px; }
+      50% { height: 16px; }
+    }
+
+    /* Empty state */
+    .empty-state {
+      text-align: center;
+      padding: 4rem 2rem;
+      color: var(--fg-muted);
+    }
+
+    .empty-state p {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      letter-spacing: 0.05em;
+    }
+
+    .empty-state .hint {
+      margin-top: 0.5rem;
+      font-size: 0.65rem;
+      opacity: 0.7;
+    }
+
+    .empty-state .desktop-only {
+      display: inline;
+    }
+
+    /* Thinking/processing state for control button */
+    .control-btn .spinner-icon {
+      display: none;
+      width: 24px;
+      height: 24px;
+      border: 2.5px solid rgba(245, 240, 232, 0.3);
+      border-top-color: var(--bg);
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    .control-btn.processing .mic-icon,
+    .control-btn.processing .stop-icon {
+      display: none;
+    }
+
+    .control-btn.processing .spinner-icon {
+      display: block;
+    }
+
+    .control-btn.processing {
+      opacity: 0.8;
+      cursor: wait;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* Settings menu - fixed top right */
+    .settings-menu {
+      position: fixed;
+      top: 1.5rem;
+      right: 1.5rem;
+      z-index: 100;
+    }
+
+    .settings-menu.hidden {
+      display: none;
+    }
+
+    .settings-menu-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+      background: var(--surface);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+      opacity: 0.6;
+    }
+
+    .settings-menu-btn:hover {
+      opacity: 1;
+      border-color: var(--fg-muted);
+    }
+
+    .settings-menu-btn svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--fg-muted);
+    }
+
+    .settings-menu-btn:hover svg {
+      fill: var(--fg);
+    }
+
+    /* Settings dropdown */
+    .settings-dropdown {
+      position: absolute;
+      top: 100%;
+      right: 0;
+      margin-top: 0.5rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.12);
+      min-width: 140px;
+      overflow: hidden;
+      opacity: 0;
+      visibility: hidden;
+      transform: translateY(-8px);
+      transition: all 0.2s ease;
+    }
+
+    .settings-dropdown.open {
+      opacity: 1;
+      visibility: visible;
+      transform: translateY(0);
+    }
+
+    .settings-dropdown button {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: none;
+      border: none;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      font-weight: 500;
+      letter-spacing: 0.02em;
+      color: var(--fg);
+      text-align: left;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+      transition: background 0.15s ease;
+    }
+
+    .settings-dropdown button:hover {
+      background: var(--bg);
+    }
+
+    .settings-dropdown button svg {
+      width: 14px;
+      height: 14px;
+      stroke: var(--fg-muted);
+      stroke-width: 1.5;
+      fill: none;
+    }
+
+    .settings-dropdown .divider {
+      height: 1px;
+      background: var(--border);
     }
 
     /* Mobile adjustments */
-    @media (max-width: 480px) {
-      .login-screen h1 {
-        font-size: 2.5rem;
+    @media (max-width: 600px) {
+      .chat-screen {
+        padding: 4rem 1.25rem 9rem;
       }
 
       .message-text {
-        font-size: 1.2rem;
+        font-size: 1.1rem;
+        line-height: 1.75;
       }
 
       .control-btn {
-        width: 80px;
-        height: 80px;
+        width: 60px;
+        height: 60px;
       }
 
-      .control-btn svg {
-        width: 28px;
-        height: 28px;
+      .floating-controls {
+        bottom: 1.5rem;
+      }
+
+      .settings-menu {
+        top: 1rem;
+        right: 1rem;
+      }
+
+      .empty-state .desktop-only {
+        display: none;
       }
     }
   </style>
 </head>
 <body>
-  <button class="logout-btn hidden" id="logoutBtn">Logout</button>
-  <button class="settings-btn hidden" id="settingsBtn">Voice</button>
-  <span class="version">v6</span>
-
   <!-- Voice Settings Modal -->
   <div class="modal-overlay hidden" id="voiceModal">
     <div class="modal">
@@ -752,23 +837,62 @@
     </div>
   </div>
 
-  <div class="container">
-    <!-- Login Screen -->
-    <div class="login-screen" id="loginScreen">
-      <h1>Voice</h1>
-      <p>Speak with AI</p>
-      <button class="login-btn" id="loginBtn">Connect with OpenRouter</button>
+  <!-- Login Screen -->
+  <div class="login-screen" id="loginScreen">
+    <h1>Voice</h1>
+    <p>Speak with AI</p>
+    <button class="login-btn" id="loginBtn">Connect with OpenRouter</button>
+  </div>
+
+  <!-- Chat Screen -->
+  <div class="chat-screen hidden" id="chatScreen">
+    <div class="transcript-area" id="transcriptArea">
+      <div class="empty-state" id="emptyState">
+        <p>Press the button<span class="desktop-only"> or spacebar</span> to speak</p>
+        <p class="hint">Your conversation will appear here</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Settings menu - top right -->
+  <div class="settings-menu hidden" id="settingsMenu">
+    <button class="settings-menu-btn" id="settingsMenuBtn" title="Settings">
+      <svg viewBox="0 0 24 24">
+        <circle cx="12" cy="5" r="1.5"/>
+        <circle cx="12" cy="12" r="1.5"/>
+        <circle cx="12" cy="19" r="1.5"/>
+      </svg>
+    </button>
+    <div class="settings-dropdown" id="settingsDropdown">
+      <button id="voiceSettingsBtn">
+        <svg viewBox="0 0 24 24">
+          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+        </svg>
+        Voice
+      </button>
+      <div class="divider"></div>
+      <button id="logoutBtn">
+        <svg viewBox="0 0 24 24">
+          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+          <polyline points="16 17 21 12 16 7"/>
+          <line x1="21" y1="12" x2="9" y2="12"/>
+        </svg>
+        Logout
+      </button>
+    </div>
+  </div>
+
+  <!-- Floating Controls -->
+  <div class="floating-controls hidden" id="floatingControls">
+    <!-- Left-side controls -->
+    <div class="floating-left">
+      <!-- Stop speech button -->
+      <button class="stop-speech-btn hidden" id="stopSpeechBtn">Stop</button>
     </div>
 
-    <!-- Chat Screen -->
-    <div class="chat-screen hidden" id="chatScreen">
-      <div class="status" id="status">
-        <span class="status-dot"></span>
-        <span class="status-text">Ready</span>
-      </div>
-
-      <div class="transcript-area" id="transcriptArea"></div>
-
+    <!-- Main mic button with waveform (always centered) -->
+    <div style="position: relative;">
       <div class="waveform" id="waveform">
         <div class="waveform-bar"></div>
         <div class="waveform-bar"></div>
@@ -776,7 +900,6 @@
         <div class="waveform-bar"></div>
         <div class="waveform-bar"></div>
       </div>
-
       <button class="control-btn" id="controlBtn">
         <svg class="mic-icon" viewBox="0 0 24 24">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
@@ -787,15 +910,12 @@
         <svg class="stop-icon" viewBox="0 0 24 24">
           <rect x="6" y="6" width="12" height="12" rx="1"/>
         </svg>
-      </button>
-
-      <button class="stop-speech-btn hidden" id="stopSpeechBtn">
-        Stop Speaking
+        <div class="spinner-icon"></div>
       </button>
     </div>
   </div>
 
-    <div class="error-toast" id="errorToast"></div>
+  <div class="error-toast" id="errorToast"></div>
 
   <!-- Cost Display -->
   <div class="cost-display hidden" id="costDisplay">
@@ -845,16 +965,19 @@
     // ============ DOM Elements ============
     const loginScreen = document.getElementById('loginScreen');
     const chatScreen = document.getElementById('chatScreen');
+    const floatingControls = document.getElementById('floatingControls');
+    const settingsMenu = document.getElementById('settingsMenu');
     const loginBtn = document.getElementById('loginBtn');
     const logoutBtn = document.getElementById('logoutBtn');
-    const settingsBtn = document.getElementById('settingsBtn');
+    const settingsMenuBtn = document.getElementById('settingsMenuBtn');
+    const settingsDropdown = document.getElementById('settingsDropdown');
+    const voiceSettingsBtn = document.getElementById('voiceSettingsBtn');
     const voiceModal = document.getElementById('voiceModal');
     const modalClose = document.getElementById('modalClose');
     const voiceList = document.getElementById('voiceList');
     const controlBtn = document.getElementById('controlBtn');
     const stopSpeechBtn = document.getElementById('stopSpeechBtn');
-    const status = document.getElementById('status');
-    const statusText = status.querySelector('.status-text');
+    const emptyState = document.getElementById('emptyState');
     const transcriptArea = document.getElementById('transcriptArea');
     const waveform = document.getElementById('waveform');
     const errorToast = document.getElementById('errorToast');
@@ -1169,6 +1292,7 @@
 
       isListening = false;
       controlBtn.classList.remove('listening');
+      controlBtn.classList.add('processing');
       waveform.classList.remove('active');
       setStatus('processing', 'Processing audio...');
     }
@@ -1312,6 +1436,7 @@
           <div class="message-label">You</div>
           <div class="message-text" style="color: var(--fg-muted); font-style: italic;">[listening...]</div>
         `;
+        hideEmptyState();
         transcriptArea.appendChild(userMessageEl);
         const userMessageTextEl = userMessageEl.querySelector('.message-text');
 
@@ -1336,6 +1461,7 @@
         let transcriptExtracted = false;
 
         setStatus('speaking', 'Speaking...');
+        controlBtn.classList.remove('processing');
         stopSpeechBtn.classList.remove('hidden');
         userHasScrolled = false;
 
@@ -1410,7 +1536,7 @@
                 messageTextEl.innerHTML = parseMarkdown(stripNoteActions(displayResponse));
 
                 if (!userHasScrolled) {
-                  transcriptArea.scrollTop = transcriptArea.scrollHeight;
+                  window.scrollTo(0, document.body.scrollHeight);
                 }
 
                 // Speak sentences (only from response, not transcript)
@@ -1473,6 +1599,7 @@
         console.error('Gemini audio API error:', error);
         showError(error.message);
         setStatus('ready', 'Ready');
+        controlBtn.classList.remove('processing');
         stopSpeechBtn.classList.add('hidden');
       }
     }
@@ -1748,7 +1875,13 @@ Respond naturally as if having a spoken conversation.`;
       apiKey = null;
       localStorage.removeItem('openrouter_api_key');
       conversationHistory = [];
-      transcriptArea.innerHTML = '';
+      // Restore empty state
+      transcriptArea.innerHTML = `
+        <div class="empty-state" id="emptyState">
+          <p>Press the button<span class="desktop-only"> or spacebar</span> to speak</p>
+          <p class="hint">Your conversation will appear here</p>
+        </div>
+      `;
       showLoginScreen();
     }
 
@@ -1756,15 +1889,23 @@ Respond naturally as if having a spoken conversation.`;
     function showLoginScreen() {
       loginScreen.classList.remove('hidden');
       chatScreen.classList.add('hidden');
-      logoutBtn.classList.add('hidden');
+      floatingControls.classList.add('hidden');
+      settingsMenu.classList.add('hidden');
+      costDisplay.classList.add('hidden');
     }
 
     function showChatScreen() {
       loginScreen.classList.add('hidden');
       chatScreen.classList.remove('hidden');
-      logoutBtn.classList.remove('hidden');
-      settingsBtn.classList.remove('hidden');
-      setStatus('ready', 'Ready');
+      floatingControls.classList.remove('hidden');
+      settingsMenu.classList.remove('hidden');
+    }
+
+    // Hide empty state when first message is added
+    function hideEmptyState() {
+      if (emptyState && emptyState.parentNode) {
+        emptyState.remove();
+      }
     }
 
     // ============ Voice Settings ============
@@ -1852,8 +1993,8 @@ Respond naturally as if having a spoken conversation.`;
     }
 
     function setStatus(state, text) {
-      status.className = 'status ' + state;
-      statusText.textContent = text;
+      // Status is now shown through button visual state
+      // This function is kept for compatibility but does nothing
     }
 
     function showError(message) {
@@ -1986,7 +2127,7 @@ Respond naturally as if having a spoken conversation.`;
                 messageTextEl.innerHTML = parseMarkdown(cleanDisplay);
 
                 if (!userHasScrolled) {
-                  transcriptArea.scrollTop = transcriptArea.scrollHeight;
+                  window.scrollTo(0, document.body.scrollHeight);
                 }
 
                 // Speak sentences (strip action tags)
@@ -2048,7 +2189,7 @@ Respond naturally as if having a spoken conversation.`;
       `;
       transcriptArea.appendChild(messageEl);
       if (!userHasScrolled) {
-        transcriptArea.scrollTop = transcriptArea.scrollHeight;
+        window.scrollTo(0, document.body.scrollHeight);
       }
     }
 
@@ -2172,14 +2313,31 @@ Respond naturally as if having a spoken conversation.`;
     // ============ Event Listeners ============
     function setupEventListeners() {
       loginBtn.addEventListener('click', startOAuthFlow);
-      logoutBtn.addEventListener('click', logout);
+      logoutBtn.addEventListener('click', () => {
+        settingsDropdown.classList.remove('open');
+        logout();
+      });
       stopSpeechBtn.addEventListener('click', stopSpeaking);
 
-      // Voice settings modal
-      settingsBtn.addEventListener('click', () => {
-        console.log('Settings button clicked');
+      // Settings dropdown menu
+      settingsMenuBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        settingsDropdown.classList.toggle('open');
+      });
+
+      // Close dropdown when clicking outside
+      document.addEventListener('click', (e) => {
+        if (!settingsDropdown.contains(e.target) && e.target !== settingsMenuBtn) {
+          settingsDropdown.classList.remove('open');
+        }
+      });
+
+      // Voice settings from dropdown
+      voiceSettingsBtn.addEventListener('click', () => {
+        settingsDropdown.classList.remove('open');
         openVoiceSettings();
       });
+
       modalClose.addEventListener('click', closeVoiceSettings);
       voiceModal.addEventListener('click', (e) => {
         if (e.target === voiceModal) closeVoiceSettings();
@@ -2202,12 +2360,12 @@ Respond naturally as if having a spoken conversation.`;
         }
       });
 
-      // Detect user scroll to disable auto-scroll
-      transcriptArea.addEventListener('scroll', () => {
-        const isAtBottom = transcriptArea.scrollTop + transcriptArea.clientHeight >= transcriptArea.scrollHeight - 50;
+      // Detect user scroll to disable auto-scroll (now on window since page scrolls)
+      window.addEventListener('scroll', () => {
+        const isAtBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 100;
 
         // If user scrolled up (away from bottom), disable auto-scroll
-        if (!isAtBottom && transcriptArea.scrollTop < lastScrollTop) {
+        if (!isAtBottom && window.scrollY < lastScrollTop) {
           userHasScrolled = true;
         }
 
@@ -2216,7 +2374,7 @@ Respond naturally as if having a spoken conversation.`;
           userHasScrolled = false;
         }
 
-        lastScrollTop = transcriptArea.scrollTop;
+        lastScrollTop = window.scrollY;
       });
 
       controlBtn.addEventListener('click', (e) => {
