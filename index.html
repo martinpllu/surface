@@ -690,7 +690,7 @@
 <body>
   <button class="logout-btn hidden" id="logoutBtn">Logout</button>
   <button class="settings-btn hidden" id="settingsBtn">Voice</button>
-  <span class="version">v3</span>
+  <span class="version">v4</span>
 
   <!-- Voice Settings Modal -->
   <div class="modal-overlay hidden" id="voiceModal">
@@ -754,6 +754,7 @@
     // ============ Configuration ============
     const OPENROUTER_AUTH_URL = 'https://openrouter.ai/auth';
     const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1';
+    const NOTES_STORAGE_KEY = 'surface_notes';
     // Models that stream well: anthropic/claude-3-haiku, openai/gpt-4o-mini, google/gemini-3-flash-preview
     const MODEL = 'google/gemini-3-flash-preview';
     const MODEL_ONLINE = 'google/gemini-3-flash-preview:online';
@@ -809,6 +810,275 @@
     // Auto-scroll state
     let userHasScrolled = false;
     let lastScrollTop = 0;
+
+    // ============ Notes Storage ============
+    function generateId() {
+      return crypto.randomUUID();
+    }
+
+    function loadNotes() {
+      try {
+        const stored = localStorage.getItem(NOTES_STORAGE_KEY);
+        return stored ? JSON.parse(stored) : [];
+      } catch (e) {
+        console.error('Error loading notes:', e);
+        return [];
+      }
+    }
+
+    function saveNotes(notes) {
+      try {
+        localStorage.setItem(NOTES_STORAGE_KEY, JSON.stringify(notes));
+      } catch (e) {
+        console.error('Error saving notes:', e);
+      }
+    }
+
+    function createNote(content, tags = [], dueDate = null) {
+      const notes = loadNotes();
+      const now = new Date().toISOString();
+      const note = {
+        id: generateId(),
+        content,
+        tags,
+        dueDate,
+        createdAt: now,
+        modifiedAt: now
+      };
+      notes.push(note);
+      saveNotes(notes);
+      console.log('Created note:', note);
+      return note;
+    }
+
+    function updateNote(id, updates) {
+      const notes = loadNotes();
+      const index = notes.findIndex(n => n.id === id);
+      if (index === -1) {
+        console.error('Note not found:', id);
+        return null;
+      }
+      notes[index] = {
+        ...notes[index],
+        ...updates,
+        modifiedAt: new Date().toISOString()
+      };
+      saveNotes(notes);
+      console.log('Updated note:', notes[index]);
+      return notes[index];
+    }
+
+    function deleteNote(id) {
+      const notes = loadNotes();
+      const index = notes.findIndex(n => n.id === id);
+      if (index === -1) {
+        console.error('Note not found:', id);
+        return false;
+      }
+      const deleted = notes.splice(index, 1)[0];
+      saveNotes(notes);
+      console.log('Deleted note:', deleted);
+      return true;
+    }
+
+    function queryNotes(filter = {}) {
+      let notes = loadNotes();
+
+      // Filter by tags
+      if (filter.tags && filter.tags.length > 0) {
+        notes = notes.filter(n =>
+          filter.tags.some(tag => n.tags.includes(tag))
+        );
+      }
+
+      // Filter by due date range
+      if (filter.dueBefore) {
+        const before = new Date(filter.dueBefore);
+        notes = notes.filter(n => n.dueDate && new Date(n.dueDate) <= before);
+      }
+      if (filter.dueAfter) {
+        const after = new Date(filter.dueAfter);
+        notes = notes.filter(n => n.dueDate && new Date(n.dueDate) >= after);
+      }
+
+      // Sort by due date (soonest first), then by creation date
+      notes.sort((a, b) => {
+        if (a.dueDate && b.dueDate) {
+          return new Date(a.dueDate) - new Date(b.dueDate);
+        }
+        if (a.dueDate) return -1;
+        if (b.dueDate) return 1;
+        return new Date(b.createdAt) - new Date(a.createdAt);
+      });
+
+      return notes;
+    }
+
+    function formatNotesForAI(notes) {
+      if (notes.length === 0) {
+        return 'No notes found.';
+      }
+
+      return notes.map((n, i) => {
+        let line = `${i + 1}. [${n.id.slice(0, 8)}] ${n.content}`;
+        if (n.tags.length > 0) {
+          line += ` (tags: ${n.tags.join(', ')})`;
+        }
+        if (n.dueDate) {
+          const due = new Date(n.dueDate);
+          line += ` (due: ${due.toLocaleDateString()})`;
+        }
+        return line;
+      }).join('\n');
+    }
+
+    function getNotesSummary() {
+      const notes = loadNotes();
+      if (notes.length === 0) {
+        return 'No notes stored.';
+      }
+
+      const tagCounts = {};
+      notes.forEach(n => {
+        n.tags.forEach(tag => {
+          tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+        });
+      });
+
+      const tagSummary = Object.entries(tagCounts)
+        .map(([tag, count]) => `${count} ${tag}`)
+        .join(', ');
+
+      const withDueDate = notes.filter(n => n.dueDate).length;
+
+      let summary = `${notes.length} notes`;
+      if (tagSummary) {
+        summary += ` (${tagSummary})`;
+      }
+      if (withDueDate > 0) {
+        summary += `, ${withDueDate} with due dates`;
+      }
+
+      return summary;
+    }
+
+    // ============ Note Action Parsing ============
+    function parseNoteActions(text) {
+      const actions = [];
+      const regex = /<note-action>([\s\S]*?)<\/note-action>/g;
+      let match;
+
+      while ((match = regex.exec(text)) !== null) {
+        try {
+          const action = JSON.parse(match[1]);
+          actions.push(action);
+        } catch (e) {
+          console.error('Failed to parse note action:', match[1], e);
+        }
+      }
+
+      return actions;
+    }
+
+    function stripNoteActions(text) {
+      return text.replace(/<note-action>[\s\S]*?<\/note-action>/g, '').trim();
+    }
+
+    function executeNoteAction(action) {
+      console.log('Executing note action:', action);
+
+      switch (action.action) {
+        case 'create':
+          return createNote(action.content, action.tags || [], action.dueDate || null);
+
+        case 'update':
+          if (!action.id) {
+            console.error('Update action missing id');
+            return null;
+          }
+          // Find note by prefix match
+          const notes = loadNotes();
+          const noteToUpdate = notes.find(n => n.id.startsWith(action.id));
+          if (!noteToUpdate) {
+            console.error('Note not found for update:', action.id);
+            return null;
+          }
+          const updates = {};
+          if (action.content !== undefined) updates.content = action.content;
+          if (action.tags !== undefined) updates.tags = action.tags;
+          if (action.dueDate !== undefined) updates.dueDate = action.dueDate;
+          return updateNote(noteToUpdate.id, updates);
+
+        case 'delete':
+          if (!action.id) {
+            console.error('Delete action missing id');
+            return false;
+          }
+          const allNotes = loadNotes();
+          const noteToDelete = allNotes.find(n => n.id.startsWith(action.id));
+          if (!noteToDelete) {
+            console.error('Note not found for delete:', action.id);
+            return false;
+          }
+          return deleteNote(noteToDelete.id);
+
+        case 'read':
+          // Read actions are handled separately with follow-up API call
+          return queryNotes(action.filter || {});
+
+        default:
+          console.error('Unknown note action:', action.action);
+          return null;
+      }
+    }
+
+    function buildSystemPrompt() {
+      const notesSummary = getNotesSummary();
+      const today = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      return `You are a helpful voice assistant running in voice mode. Today is ${today}.
+
+INPUT: The user's speech is converted to text via speech-to-text, so expect occasional transcription errors, mishearings, or unclear words. If something doesn't make sense, politely ask the user to repeat or confirm.
+
+OUTPUT: Your responses will be converted to speech via text-to-speech. Therefore:
+- Keep responses concise and conversational
+- Never include URLs, links, or web addresses - describe the source instead
+- Avoid markdown formatting, bullet points, asterisks, or special characters
+- Don't use abbreviations that sound awkward when spoken (e.g., say "for example" not "e.g.")
+- Avoid excessive punctuation like ellipses or parenthetical asides
+- Use natural spoken language with clear sentence structure
+- Numbers should be written as words when short (e.g., "three" not "3")
+
+NOTES SYSTEM: You have access to the user's personal notes. Current status: ${notesSummary}.
+
+You can manage notes using action tags. These tags are processed by the system and will not be spoken aloud. Available actions:
+
+1. CREATE a note:
+<note-action>{"action":"create","content":"Note text here","tags":["todo"],"dueDate":"2025-01-15"}</note-action>
+Tags and dueDate are optional. Common tags: todo, reminder, idea, shopping, work, personal.
+
+2. READ notes (to see what notes exist):
+<note-action>{"action":"read"}</note-action>
+Or with filters:
+<note-action>{"action":"read","filter":{"tags":["todo"]}}</note-action>
+
+3. UPDATE a note (use the 8-character ID prefix from read results):
+<note-action>{"action":"update","id":"abc12345","content":"Updated text","tags":["done"]}</note-action>
+
+4. DELETE a note:
+<note-action>{"action":"delete","id":"abc12345"}</note-action>
+
+When the user mentions todos, reminders, things to remember, or asks about their notes, use the read action first to retrieve the current notes, then respond based on what you find.
+
+When the user asks you to remember something, add a todo, or set a reminder, create a note with appropriate tags.
+
+Respond naturally as if having a spoken conversation.`;
+    }
 
     // Simple markdown parser
     function parseMarkdown(text) {
@@ -1281,20 +1551,7 @@
             messages: [
               {
                 role: 'system',
-                content: `You are a helpful voice assistant running in voice mode.
-
-INPUT: The user's speech is converted to text via speech-to-text, so expect occasional transcription errors, mishearings, or unclear words. If something doesn't make sense, politely ask the user to repeat or confirm.
-
-OUTPUT: Your responses will be converted to speech via text-to-speech. Therefore:
-- Keep responses concise and conversational
-- Never include URLs, links, or web addresses - describe the source instead
-- Avoid markdown formatting, bullet points, asterisks, or special characters
-- Don't use abbreviations that sound awkward when spoken (e.g., say "for example" not "e.g.")
-- Avoid excessive punctuation like ellipses or parenthetical asides
-- Use natural spoken language with clear sentence structure
-- Numbers should be written as words when short (e.g., "three" not "3")
-
-Respond naturally as if having a spoken conversation.`
+                content: buildSystemPrompt()
               },
               ...conversationHistory
             ]
@@ -1362,7 +1619,8 @@ Respond naturally as if having a spoken conversation.`
                 fullResponse += content;
                 fullResponseText = fullResponse; // Track for interruption
                 sentenceBuffer += content;
-                messageTextEl.innerHTML = parseMarkdown(fullResponse);
+                // Display without note-action tags
+                messageTextEl.innerHTML = parseMarkdown(stripNoteActions(fullResponse));
 
                 // Auto-scroll unless user has scrolled up
                 if (!userHasScrolled) {
@@ -1370,11 +1628,35 @@ Respond naturally as if having a spoken conversation.`
                 }
 
                 // Check for sentence boundaries to speak
-                const sentenceMatch = sentenceBuffer.match(/^(.*?[.!?])\s*/);
-                if (sentenceMatch) {
-                  const sentence = sentenceMatch[1];
-                  sentenceBuffer = sentenceBuffer.slice(sentenceMatch[0].length);
-                  queueSpeech(sentence);
+                // Don't speak if we're in the middle of a note-action tag
+                if (!sentenceBuffer.includes('<note-action>') || sentenceBuffer.includes('</note-action>')) {
+                  const cleanBuffer = stripNoteActions(sentenceBuffer);
+                  const sentenceMatch = cleanBuffer.match(/^(.*?[.!?])\s*/);
+                  if (sentenceMatch) {
+                    const sentence = sentenceMatch[1];
+                    // Find where this sentence ends in the original buffer
+                    const strippedSoFar = stripNoteActions(sentenceBuffer.substring(0, sentenceBuffer.length));
+                    if (strippedSoFar.startsWith(sentence)) {
+                      // Find the actual end position accounting for stripped tags
+                      let consumed = 0;
+                      let cleanConsumed = 0;
+                      while (cleanConsumed < sentenceMatch[0].length && consumed < sentenceBuffer.length) {
+                        if (sentenceBuffer.substring(consumed).startsWith('<note-action>')) {
+                          const endTag = sentenceBuffer.indexOf('</note-action>', consumed);
+                          if (endTag !== -1) {
+                            consumed = endTag + '</note-action>'.length;
+                          } else {
+                            break;
+                          }
+                        } else {
+                          consumed++;
+                          cleanConsumed++;
+                        }
+                      }
+                      sentenceBuffer = sentenceBuffer.slice(consumed);
+                      queueSpeech(sentence);
+                    }
+                  }
                 }
               }
             } catch (e) {
@@ -1383,19 +1665,158 @@ Respond naturally as if having a spoken conversation.`
           }
         }
 
-        // Speak any remaining text
-        if (sentenceBuffer.trim()) {
-          queueSpeech(sentenceBuffer.trim());
+        // Speak any remaining text (but strip note actions first)
+        const remainingToSpeak = stripNoteActions(sentenceBuffer.trim());
+        if (remainingToSpeak) {
+          queueSpeech(remainingToSpeak);
         }
 
-        // Add to history
-        conversationHistory.push({ role: 'assistant', content: fullResponse });
+        // Parse and handle note actions
+        const actions = parseNoteActions(fullResponse);
+        const cleanResponse = stripNoteActions(fullResponse);
+
+        // Update display with clean response (no action tags)
+        messageTextEl.innerHTML = parseMarkdown(cleanResponse);
+
+        // Check for read actions - need follow-up API call
+        const readAction = actions.find(a => a.action === 'read');
+        if (readAction) {
+          console.log('Read action detected, making follow-up call');
+          const notes = queryNotes(readAction.filter || {});
+          await continueWithNotes(notes, cleanResponse, messageEl);
+        } else {
+          // Execute non-read actions
+          for (const action of actions) {
+            executeNoteAction(action);
+          }
+          // Add to history with clean response
+          conversationHistory.push({ role: 'assistant', content: cleanResponse });
+        }
 
       } catch (error) {
         console.error('API error:', error);
         showError(error.message);
         setStatus('ready', 'Ready');
         stopSpeechBtn.classList.add('hidden');
+      }
+    }
+
+    async function continueWithNotes(notes, previousResponse, messageEl) {
+      const messageTextEl = messageEl.querySelector('.message-text');
+      const notesData = formatNotesForAI(notes);
+
+      // Add the previous response and notes context to conversation
+      conversationHistory.push({ role: 'assistant', content: previousResponse });
+      conversationHistory.push({
+        role: 'user',
+        content: `[SYSTEM: Here are the requested notes]\n${notesData}`
+      });
+
+      try {
+        const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'Voice Chat'
+          },
+          body: JSON.stringify({
+            model: MODEL,
+            stream: true,
+            messages: [
+              { role: 'system', content: buildSystemPrompt() },
+              ...conversationHistory
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'API request failed');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = previousResponse + ' ';
+        let sentenceBuffer = '';
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+
+            const data = trimmedLine.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                fullResponse += content;
+                fullResponseText = fullResponse;
+                sentenceBuffer += content;
+
+                // Update display (strip any action tags)
+                const cleanDisplay = stripNoteActions(fullResponse);
+                messageTextEl.innerHTML = parseMarkdown(cleanDisplay);
+
+                if (!userHasScrolled) {
+                  transcriptArea.scrollTop = transcriptArea.scrollHeight;
+                }
+
+                // Speak sentences (strip action tags)
+                const cleanBuffer = stripNoteActions(sentenceBuffer);
+                const sentenceMatch = cleanBuffer.match(/^(.*?[.!?])\s*/);
+                if (sentenceMatch) {
+                  const sentence = sentenceMatch[1];
+                  sentenceBuffer = sentenceBuffer.slice(sentenceBuffer.indexOf(sentenceMatch[0]) + sentenceMatch[0].length);
+                  queueSpeech(sentence);
+                }
+              }
+            } catch (e) {
+              // Parse error, skip
+            }
+          }
+        }
+
+        // Speak remaining
+        const remainingToSpeak = stripNoteActions(sentenceBuffer.trim());
+        if (remainingToSpeak) {
+          queueSpeech(remainingToSpeak);
+        }
+
+        // Parse any actions in the follow-up response
+        const actions = parseNoteActions(fullResponse);
+        const cleanResponse = stripNoteActions(fullResponse);
+
+        messageTextEl.innerHTML = parseMarkdown(cleanResponse);
+
+        // Execute non-read actions
+        for (const action of actions) {
+          if (action.action !== 'read') {
+            executeNoteAction(action);
+          }
+        }
+
+        // Update the last assistant message in history
+        conversationHistory.pop(); // Remove the [SYSTEM: notes] message
+        conversationHistory.pop(); // Remove the previous assistant message
+        conversationHistory.push({ role: 'assistant', content: cleanResponse });
+
+      } catch (error) {
+        console.error('API error in follow-up:', error);
+        showError(error.message);
       }
     }
 

@@ -11,6 +11,10 @@ A voice chat application that lets you have spoken conversations with AI through
 - **Interruption**: Start speaking to interrupt the AI mid-response
 - **Voice selection**: Choose from available system voices
 - **Keyboard shortcut**: Press Space to start/stop listening
+- **Notes system**: The AI can create, read, update, and delete notes stored locally
+  - Ask it to remember things, add todos, or set reminders
+  - Notes persist in localStorage with tags and due dates
+  - Say "what are my todos?" to have the AI read your notes
 
 ## Tech Stack
 
@@ -27,7 +31,7 @@ A voice chat application that lets you have spoken conversations with AI through
 
 ## Usage
 
-1. Open https://martinpllu.github.io/surface/voice-chat.html
+1. Open https://martinpllu.github.io/surface/
 2. Click "Connect with OpenRouter" and log in
 3. Click the mic button or press Space to start talking
 4. Click again or press Space to send your message
@@ -37,10 +41,9 @@ A voice chat application that lets you have spoken conversations with AI through
 
 ```bash
 python3 -m http.server 3000
-# Open http://localhost:3000/voice-chat.html
+# Open http://localhost:3000/
 ```
 
 ## Files
 
-- `voice-chat.html` - Main application
-- `web-speech-demo.html` - Standalone Web Speech API demo for testing
+- `index.html` - Main application
