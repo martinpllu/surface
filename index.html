@@ -690,7 +690,7 @@
 <body>
   <button class="logout-btn hidden" id="logoutBtn">Logout</button>
   <button class="settings-btn hidden" id="settingsBtn">Voice</button>
-  <span class="version">v4</span>
+  <span class="version">v5</span>
 
   <!-- Voice Settings Modal -->
   <div class="modal-overlay hidden" id="voiceModal">
@@ -810,6 +810,64 @@
     // Auto-scroll state
     let userHasScrolled = false;
     let lastScrollTop = 0;
+
+    // ============ Stats Tracking ============
+    const stats = {
+      totalInputTokens: 0,
+      totalOutputTokens: 0,
+      totalCost: 0,
+      latencies: [],
+      lastResponse: {
+        inputTokens: 0,
+        outputTokens: 0,
+        cost: 0,
+        latencyMs: 0
+      }
+    };
+
+    // Pricing per million tokens (Gemini 2.5 Flash Preview)
+    const PRICING = {
+      input: 0.15 / 1000000,   // $0.15 per 1M input tokens
+      output: 0.60 / 1000000   // $0.60 per 1M output tokens (non-thinking)
+    };
+
+    function logStats() {
+      const latencies = stats.latencies;
+      const minLatency = latencies.length > 0 ? Math.min(...latencies) : 0;
+      const maxLatency = latencies.length > 0 ? Math.max(...latencies) : 0;
+      const avgLatency = latencies.length > 0 ? latencies.reduce((a, b) => a + b, 0) / latencies.length : 0;
+
+      console.log('%c📊 Response Stats', 'font-weight: bold; font-size: 14px;');
+      console.log(`   Last response:`);
+      console.log(`     Tokens: ${stats.lastResponse.inputTokens} in / ${stats.lastResponse.outputTokens} out`);
+      console.log(`     Cost: $${stats.lastResponse.cost.toFixed(6)}`);
+      console.log(`     Latency: ${stats.lastResponse.latencyMs}ms`);
+      console.log(`   Session totals:`);
+      console.log(`     Tokens: ${stats.totalInputTokens} in / ${stats.totalOutputTokens} out`);
+      console.log(`     Cost: $${stats.totalCost.toFixed(6)}`);
+      console.log(`     Latency (min/avg/max): ${minLatency}ms / ${Math.round(avgLatency)}ms / ${maxLatency}ms`);
+      console.log(`     Requests: ${latencies.length}`);
+    }
+
+    function updateStats(usage, latencyMs) {
+      const inputTokens = usage?.prompt_tokens || 0;
+      const outputTokens = usage?.completion_tokens || 0;
+      const cost = (inputTokens * PRICING.input) + (outputTokens * PRICING.output);
+
+      stats.lastResponse = {
+        inputTokens,
+        outputTokens,
+        cost,
+        latencyMs
+      };
+
+      stats.totalInputTokens += inputTokens;
+      stats.totalOutputTokens += outputTokens;
+      stats.totalCost += cost;
+      stats.latencies.push(latencyMs);
+
+      logStats();
+    }
 
     // ============ Notes Storage ============
     function generateId() {
@@ -1536,6 +1594,9 @@ Respond naturally as if having a spoken conversation.`;
       spokenText = '';
       fullResponseText = '';
 
+      // Track timing
+      const requestStartTime = performance.now();
+
       try {
         const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
           method: 'POST',
@@ -1579,6 +1640,7 @@ Respond naturally as if having a spoken conversation.`;
         let fullResponse = '';
         let sentenceBuffer = '';
         let buffer = '';
+        let usage = null;
 
         setStatus('speaking', 'Speaking...');
         stopSpeechBtn.classList.remove('hidden');
@@ -1613,6 +1675,10 @@ Respond naturally as if having a spoken conversation.`;
 
             try {
               const parsed = JSON.parse(data);
+              // Capture usage from final chunk
+              if (parsed.usage) {
+                usage = parsed.usage;
+              }
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 console.log('Content chunk:', content);
@@ -1671,6 +1737,10 @@ Respond naturally as if having a spoken conversation.`;
           queueSpeech(remainingToSpeak);
         }
 
+        // Log stats
+        const latencyMs = Math.round(performance.now() - requestStartTime);
+        updateStats(usage, latencyMs);
+
         // Parse and handle note actions
         const actions = parseNoteActions(fullResponse);
         const cleanResponse = stripNoteActions(fullResponse);
@@ -1712,6 +1782,8 @@ Respond naturally as if having a spoken conversation.`;
         content: `[SYSTEM: Here are the requested notes]\n${notesData}`
       });
 
+      const followUpStartTime = performance.now();
+
       try {
         const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
           method: 'POST',
@@ -1741,6 +1813,7 @@ Respond naturally as if having a spoken conversation.`;
         let fullResponse = previousResponse + ' ';
         let sentenceBuffer = '';
         let buffer = '';
+        let usage = null;
 
         while (true) {
           const { done, value } = await reader.read();
@@ -1761,6 +1834,9 @@ Respond naturally as if having a spoken conversation.`;
 
             try {
               const parsed = JSON.parse(data);
+              if (parsed.usage) {
+                usage = parsed.usage;
+              }
               const content = parsed.choices?.[0]?.delta?.content;
               if (content) {
                 fullResponse += content;
@@ -1795,6 +1871,10 @@ Respond naturally as if having a spoken conversation.`;
         if (remainingToSpeak) {
           queueSpeech(remainingToSpeak);
         }
+
+        // Log stats for follow-up call
+        const followUpLatencyMs = Math.round(performance.now() - followUpStartTime);
+        updateStats(usage, followUpLatencyMs);
 
         // Parse any actions in the follow-up response
         const actions = parseNoteActions(fullResponse);
