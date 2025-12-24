@@ -6,7 +6,7 @@
   <title>Voice</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,400&family=Source+Serif+4:ital,opsz,wght@0,8..60,300;0,8..60,400;0,8..60,500;1,8..60,400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=Source+Serif+4:opsz,wght@8..60,300;8..60,400;8..60,500&display=swap" rel="stylesheet">
   <style>
     :root {
       --bg: #f5f0e8;
@@ -14,10 +14,10 @@
       --fg: #2d2a24;
       --fg-muted: #7a756b;
       --accent: #c45a3b;
-      --accent-soft: rgba(196, 90, 59, 0.15);
       --surface: #ffffff;
       --surface-hover: #faf8f5;
       --border: #d9d4ca;
+      --listening: #c45a3b;
       --success: #5a8a5e;
       --link: #3d6a99;
     }
@@ -28,19 +28,18 @@
       box-sizing: border-box;
     }
 
-    html {
+    html, body {
       height: 100%;
+      overflow: hidden;
     }
 
     body {
       font-family: 'Source Serif 4', Georgia, serif;
       background: var(--bg);
       color: var(--fg);
-      min-height: 100%;
-      line-height: 1.8;
     }
 
-    /* Login Screen - centered */
+    /* Login Screen */
     .login-screen {
       position: fixed;
       inset: 0;
@@ -49,7 +48,10 @@
       align-items: center;
       justify-content: center;
       animation: fadeIn 0.6s ease-out;
-      background: var(--bg);
+    }
+
+    .login-screen.hidden {
+      display: none;
     }
 
     .login-screen h1 {
@@ -94,173 +96,31 @@
       transform: translateY(0);
     }
 
-    .login-screen.hidden {
-      display: none;
-    }
-
-    /* Chat Screen - full page scroll */
-    .chat-screen {
-      min-height: 100vh;
-      padding: 6rem 1.5rem 10rem;
-      animation: fadeIn 0.6s ease-out;
-    }
-
-    .chat-screen.hidden {
-      display: none;
-    }
-
-    /* Transcript - the page itself */
-    .transcript-area {
-      max-width: 600px;
-      margin: 0 auto;
+    /* Main Voice Screen */
+    .voice-screen {
+      position: fixed;
+      inset: 0;
       display: flex;
       flex-direction: column;
-      gap: 2.5rem;
+      align-items: center;
+      justify-content: center;
     }
 
-    .message {
-      animation: slideUp 0.4s ease-out;
+    .voice-screen.hidden {
+      display: none;
     }
 
-    .message-label {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.6rem;
-      font-weight: 500;
-      letter-spacing: 0.15em;
-      text-transform: uppercase;
-      color: var(--fg-muted);
-      margin-bottom: 0.6rem;
-      opacity: 0.7;
-    }
-
-    .message-text {
-      font-size: 1.25rem;
-      line-height: 1.85;
-      color: var(--fg);
-    }
-
-    .message.user .message-text {
-      color: var(--fg-muted);
-      font-style: italic;
-    }
-
-    .message.assistant .message-text {
-      color: var(--fg);
-    }
-
-    /* Markdown rendering styles */
-    .message-text p {
-      margin-bottom: 1em;
-    }
-
-    .message-text p:last-child {
-      margin-bottom: 0;
-    }
-
-    .message-text strong {
-      font-weight: 600;
-    }
-
-    .message-text em {
-      font-style: italic;
-    }
-
-    .message-text a {
-      color: var(--link);
-      text-decoration: underline;
-      text-underline-offset: 3px;
-      text-decoration-thickness: 1px;
-    }
-
-    .message-text a:hover {
-      color: var(--accent);
-    }
-
-    .message-text ul, .message-text ol {
-      margin: 0.75em 0;
-      padding-left: 1.5em;
-    }
-
-    .message-text li {
-      margin-bottom: 0.4em;
-    }
-
-    .message-text code {
-      font-family: 'IBM Plex Mono', monospace;
-      background: var(--bg-warm);
-      padding: 0.15em 0.4em;
-      border-radius: 3px;
-      font-size: 0.85em;
-    }
-
-    .message-text pre {
-      font-family: 'IBM Plex Mono', monospace;
-      background: var(--bg-warm);
-      padding: 1.25em;
-      border-radius: 4px;
-      overflow-x: auto;
-      margin: 1em 0;
-      font-size: 0.85rem;
-      line-height: 1.5;
-    }
-
-    .message-text pre code {
-      background: none;
-      padding: 0;
-    }
-
-    .message-text blockquote {
-      border-left: 2px solid var(--border);
-      padding-left: 1.25em;
-      margin: 1em 0;
-      color: var(--fg-muted);
-      font-style: italic;
-    }
-
-    @keyframes slideUp {
-      from { opacity: 0; transform: translateY(16px); }
-      to { opacity: 1; transform: translateY(0); }
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; }
-      to { opacity: 1; }
-    }
-
-    /* Floating Controls */
-    .floating-controls {
-      position: fixed;
-      bottom: 2rem;
-      left: 0;
-      right: 0;
+    /* The Button - Central Control */
+    .button-container {
+      position: relative;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 100;
-      pointer-events: none;
     }
 
-    .floating-controls > * {
-      pointer-events: auto;
-    }
-
-    .floating-controls.hidden {
-      display: none;
-    }
-
-    /* Left-side controls (spinner, stop) */
-    .floating-left {
-      position: absolute;
-      right: calc(50% + 44px);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    /* Main mic button */
-    .control-btn {
-      width: 64px;
-      height: 64px;
+    .main-button {
+      width: 80px;
+      height: 80px;
       border-radius: 50%;
       border: none;
       background: var(--fg);
@@ -272,595 +132,200 @@
       box-shadow: 0 4px 20px rgba(45, 42, 36, 0.25);
     }
 
-    .control-btn:hover {
+    .main-button:hover {
       transform: scale(1.08);
       box-shadow: 0 6px 28px rgba(45, 42, 36, 0.35);
     }
 
-    .control-btn:active {
+    .main-button:active {
       transform: scale(0.96);
     }
 
-    .control-btn.listening {
-      background: var(--accent);
-      box-shadow: 0 4px 24px rgba(196, 90, 59, 0.4);
-    }
-
-    .control-btn.disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-    }
-
-    .control-btn svg {
-      width: 24px;
-      height: 24px;
+    .main-button svg {
+      width: 28px;
+      height: 28px;
       stroke: var(--bg);
       stroke-width: 1.75;
       fill: none;
       transition: all 0.2s ease;
     }
 
-    .control-btn .stop-icon {
+    .main-button .stop-icon {
       display: none;
     }
 
-    .control-btn.listening .mic-icon {
+    .main-button .spinner-icon {
       display: none;
-    }
-
-    .control-btn.listening .stop-icon {
-      display: block;
-    }
-
-    /* Secondary floating buttons */
-    .float-btn {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      opacity: 0.7;
-    }
-
-    .float-btn:hover {
-      opacity: 1;
-      border-color: var(--fg-muted);
-      transform: scale(1.05);
-    }
-
-    .float-btn svg {
-      width: 16px;
-      height: 16px;
-      stroke: var(--fg-muted);
-      stroke-width: 1.5;
-      fill: none;
-    }
-
-    .float-btn:hover svg {
-      stroke: var(--fg);
-    }
-
-    /* Stop speech button - appears inline */
-    .stop-speech-btn {
-      height: 40px;
-      padding: 0 1rem;
-      border-radius: 20px;
-      border: 1px solid var(--accent);
-      background: var(--surface);
-      color: var(--accent);
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.65rem;
-      font-weight: 500;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      cursor: pointer;
-      transition: all 0.2s ease;
-    }
-
-    .stop-speech-btn:hover {
-      background: var(--accent);
-      color: white;
-    }
-
-    .stop-speech-btn.hidden {
-      display: none;
-    }
-
-    /* Search toggle */
-    .search-toggle {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-      padding: 0.5rem 0.75rem;
-      border-radius: 20px;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      cursor: pointer;
-      transition: all 0.2s ease;
-      opacity: 0.7;
-    }
-
-    .search-toggle:hover {
-      opacity: 1;
-      border-color: var(--fg-muted);
-    }
-
-    .search-toggle.active {
-      opacity: 1;
-      border-color: var(--link);
-      background: rgba(61, 106, 153, 0.1);
-    }
-
-    .search-toggle svg {
-      width: 16px;
-      height: 16px;
-      stroke: var(--fg-muted);
-      stroke-width: 1.5;
-      fill: none;
-      transition: stroke 0.2s ease;
-    }
-
-    .search-toggle.active svg {
-      stroke: var(--link);
-    }
-
-    .search-toggle-label {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.6rem;
-      font-weight: 500;
-      letter-spacing: 0.03em;
-      text-transform: uppercase;
-      color: var(--fg-muted);
-      transition: color 0.2s ease;
-    }
-
-    .search-toggle.active .search-toggle-label {
-      color: var(--link);
-    }
-
-    .search-toggle.hidden {
-      display: none;
-    }
-
-    /* Right-side controls (text input button) */
-    .floating-right {
-      position: absolute;
-      left: calc(50% + 44px);
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    /* Text input bar */
-    .text-input-bar {
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      background: var(--surface);
-      border-top: 1px solid var(--border);
-      padding: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      z-index: 101;
-      transform: translateY(100%);
-      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    .text-input-bar.open {
-      transform: translateY(0);
-    }
-
-    .text-input-bar input {
-      flex: 1;
-      height: 44px;
-      padding: 0 1rem;
-      border: 1px solid var(--border);
-      border-radius: 22px;
-      background: var(--bg);
-      font-family: 'Source Serif 4', Georgia, serif;
-      font-size: 1rem;
-      color: var(--fg);
-      outline: none;
-      transition: border-color 0.2s ease;
-    }
-
-    .text-input-bar input:focus {
-      border-color: var(--fg-muted);
-    }
-
-    .text-input-bar input::placeholder {
-      color: var(--fg-muted);
-      opacity: 0.6;
-    }
-
-    .text-input-bar .send-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: none;
-      background: var(--fg);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
-    }
-
-    .text-input-bar .send-btn:hover {
-      transform: scale(1.05);
-      box-shadow: 0 4px 12px rgba(45, 42, 36, 0.2);
-    }
-
-    .text-input-bar .send-btn:disabled {
-      opacity: 0.4;
-      cursor: not-allowed;
-      transform: none;
-    }
-
-    .text-input-bar .send-btn svg {
-      width: 20px;
-      height: 20px;
-      stroke: var(--bg);
-      stroke-width: 2;
-      fill: none;
-    }
-
-    .text-input-bar .close-btn {
-      width: 44px;
-      height: 44px;
-      border-radius: 50%;
-      border: 1px solid var(--border);
-      background: var(--surface);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-      flex-shrink: 0;
-    }
-
-    .text-input-bar .close-btn:hover {
-      border-color: var(--fg-muted);
-    }
-
-    .text-input-bar .close-btn svg {
-      width: 18px;
-      height: 18px;
-      stroke: var(--fg-muted);
-      stroke-width: 1.5;
-      fill: none;
-    }
-
-    /* Cost Display - minimal footer */
-    .cost-display {
-      position: fixed;
-      bottom: 1rem;
-      left: 1rem;
-      display: flex;
-      gap: 1.5rem;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.6rem;
-      font-weight: 400;
-      letter-spacing: 0.02em;
-      color: var(--fg-muted);
-      opacity: 0.5;
-      z-index: 10;
-      font-variant-numeric: tabular-nums;
-      transition: opacity 0.2s ease;
-    }
-
-    .cost-display:hover {
-      opacity: 0.8;
-    }
-
-    .cost-display.hidden {
-      display: none;
-    }
-
-    .cost-row {
-      display: flex;
-      align-items: center;
-      gap: 0.4rem;
-    }
-
-    .cost-label {
-      text-transform: uppercase;
-      letter-spacing: 0.08em;
-    }
-
-    .cost-value {
-      color: var(--fg);
-    }
-
-    .cost-value.highlight {
-      color: var(--accent);
-    }
-
-    /* Error toast */
-    .error-toast {
-      position: fixed;
-      bottom: 6rem;
-      left: 50%;
-      transform: translateX(-50%) translateY(20px);
-      background: var(--surface);
-      border: 1px solid var(--accent);
-      padding: 0.75rem 1.25rem;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.75rem;
-      color: var(--accent);
-      opacity: 0;
-      transition: all 0.3s ease;
-      z-index: 200;
-      border-radius: 4px;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-      pointer-events: none;
-    }
-
-    .error-toast.visible {
-      opacity: 1;
-      transform: translateX(-50%) translateY(0);
-    }
-
-    /* Modal */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: rgba(45, 42, 36, 0.4);
-      backdrop-filter: blur(4px);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 1000;
-      padding: 1rem;
-    }
-
-    .modal-overlay.hidden {
-      display: none;
-    }
-
-    .modal {
-      background: var(--surface);
-      border-radius: 8px;
-      width: 100%;
-      max-width: 440px;
-      max-height: 70vh;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
-    }
-
-    .modal-header {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 1.25rem 1.5rem;
-      border-bottom: 1px solid var(--border);
-    }
-
-    .modal-header h3 {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      text-transform: uppercase;
-      color: var(--fg);
-    }
-
-    .modal-close {
-      background: none;
-      border: none;
-      font-size: 1.25rem;
-      color: var(--fg-muted);
-      cursor: pointer;
-      line-height: 1;
-      padding: 0;
-      transition: color 0.15s ease;
-    }
-
-    .modal-close:hover {
-      color: var(--fg);
-    }
-
-    .modal-body {
-      padding: 1rem;
-      overflow-y: auto;
-    }
-
-    .voice-list {
-      display: flex;
-      flex-direction: column;
-      gap: 0.4rem;
-    }
-
-    .voice-item {
-      display: flex;
-      align-items: center;
-      gap: 0.75rem;
-      padding: 0.65rem 0.9rem;
-      background: var(--bg);
-      border: 1px solid transparent;
-      border-radius: 4px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-    }
-
-    .voice-item:hover {
-      background: var(--bg-warm);
-    }
-
-    .voice-item.selected {
-      border-color: var(--accent);
-      background: var(--accent-soft);
-    }
-
-    .voice-item-radio {
-      width: 14px;
-      height: 14px;
-      border: 1.5px solid var(--border);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      flex-shrink: 0;
-    }
-
-    .voice-item.selected .voice-item-radio {
-      border-color: var(--accent);
-    }
-
-    .voice-item.selected .voice-item-radio::after {
-      content: '';
-      width: 6px;
-      height: 6px;
-      background: var(--accent);
-      border-radius: 50%;
-    }
-
-    .voice-item-info {
-      flex: 1;
-      min-width: 0;
-    }
-
-    .voice-item-name {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.75rem;
-      font-weight: 500;
-      color: var(--fg);
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-
-    .voice-item-lang {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.6rem;
-      color: var(--fg-muted);
-      margin-top: 0.1rem;
-    }
-
-    .voice-item-preview {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      color: var(--fg-muted);
-      padding: 0.35rem 0.6rem;
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.6rem;
-      font-weight: 500;
-      border-radius: 3px;
-      cursor: pointer;
-      transition: all 0.15s ease;
-      flex-shrink: 0;
-    }
-
-    .voice-item-preview:hover {
-      border-color: var(--fg-muted);
-      color: var(--fg);
-    }
-
-    /* Waveform - subtle indicator */
-    .waveform {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 2px;
-      height: 24px;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%);
-      margin-bottom: 0.5rem;
-    }
-
-    .waveform.active {
-      opacity: 1;
-    }
-
-    .waveform-bar {
-      width: 2px;
-      height: 4px;
-      background: var(--accent);
-      border-radius: 1px;
-      transition: height 0.1s ease;
-    }
-
-    .waveform.active .waveform-bar {
-      animation: wave 0.8s ease-in-out infinite;
-    }
-
-    .waveform-bar:nth-child(1) { animation-delay: 0s; }
-    .waveform-bar:nth-child(2) { animation-delay: 0.1s; }
-    .waveform-bar:nth-child(3) { animation-delay: 0.2s; }
-    .waveform-bar:nth-child(4) { animation-delay: 0.3s; }
-    .waveform-bar:nth-child(5) { animation-delay: 0.4s; }
-
-    @keyframes wave {
-      0%, 100% { height: 4px; }
-      50% { height: 16px; }
-    }
-
-    /* Empty state */
-    .empty-state {
-      text-align: center;
-      padding: 4rem 2rem;
-      color: var(--fg-muted);
-    }
-
-    .empty-state p {
-      font-family: 'IBM Plex Mono', monospace;
-      font-size: 0.75rem;
-      letter-spacing: 0.05em;
-    }
-
-    .empty-state .hint {
-      margin-top: 0.5rem;
-      font-size: 0.65rem;
-      opacity: 0.7;
-    }
-
-    .empty-state .desktop-only {
-      display: inline;
-    }
-
-    /* Thinking/processing state for control button */
-    .control-btn .spinner-icon {
-      display: none;
-      width: 24px;
-      height: 24px;
-      border: 2.5px solid rgba(245, 240, 232, 0.3);
+      width: 28px;
+      height: 28px;
+      border: 3px solid rgba(245, 240, 232, 0.3);
       border-top-color: var(--bg);
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
     }
 
-    .control-btn.processing .mic-icon,
-    .control-btn.processing .stop-icon {
+    /* Button States */
+    .main-button.listening {
+      background: var(--accent);
+      box-shadow: 0 4px 24px rgba(196, 90, 59, 0.4);
+    }
+
+    .main-button.listening .mic-icon {
       display: none;
     }
 
-    .control-btn.processing .spinner-icon {
+    .main-button.listening .stop-icon {
       display: block;
     }
 
-    .control-btn.processing {
+    .main-button.processing {
       opacity: 0.8;
       cursor: wait;
+    }
+
+    .main-button.processing .mic-icon,
+    .main-button.processing .stop-icon {
+      display: none;
+    }
+
+    .main-button.processing .spinner-icon {
+      display: block;
+    }
+
+    .main-button.speaking {
+      background: var(--accent);
+      box-shadow: 0 4px 24px rgba(196, 90, 59, 0.4);
     }
 
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
 
-    /* Settings menu - fixed top right */
+    /* Status Text */
+    .status-text {
+      position: absolute;
+      bottom: -50px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+      white-space: nowrap;
+      transition: all 0.3s ease;
+    }
+
+    .status-text.listening {
+      color: var(--accent);
+    }
+
+    .status-text.speaking {
+      color: var(--accent);
+    }
+
+    /* Hint text below button */
+    .hint-text {
+      position: fixed;
+      bottom: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--fg-muted);
+      opacity: 0.6;
+      transition: opacity 0.3s ease;
+    }
+
+    .hint-text.hidden {
+      opacity: 0;
+    }
+
+    .hint-text kbd {
+      display: inline-block;
+      padding: 0.15rem 0.5rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 3px;
+      margin: 0 0.15rem;
+    }
+
+    /* Bottom Controls */
+    .bottom-controls {
+      position: fixed;
+      bottom: 2rem;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+
+    .control-pill {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.9rem;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 20px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.65rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      color: var(--fg-muted);
+    }
+
+    .control-pill:hover {
+      border-color: var(--fg-muted);
+      color: var(--fg);
+    }
+
+    .control-pill.active {
+      border-color: var(--link);
+      background: rgba(61, 106, 153, 0.1);
+      color: var(--link);
+    }
+
+    .control-pill svg {
+      width: 14px;
+      height: 14px;
+      stroke: currentColor;
+      stroke-width: 1.5;
+      fill: none;
+    }
+
+    .control-pill.hidden {
+      display: none;
+    }
+
+    /* Search pill - show on/off state clearly */
+    .search-pill .status-indicator {
+      font-size: 0.6rem;
+      opacity: 0.7;
+    }
+
+    .search-pill.active .status-indicator {
+      opacity: 1;
+    }
+
+    /* Stop button special styling */
+    .stop-pill {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+
+    .stop-pill:hover {
+      background: rgba(196, 90, 59, 0.1);
+    }
+
+    /* Settings menu - top right */
     .settings-menu {
       position: fixed;
       top: 1.5rem;
@@ -960,33 +425,258 @@
       background: var(--border);
     }
 
-    /* Mobile adjustments */
+    /* Cost Display */
+    .cost-display {
+      position: fixed;
+      top: 1.35rem;
+      left: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.15rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 400;
+      letter-spacing: 0.02em;
+      color: var(--fg-muted);
+      opacity: 0.5;
+      z-index: 10;
+      font-variant-numeric: tabular-nums;
+      transition: opacity 0.2s ease;
+    }
+
+    .cost-display:hover {
+      opacity: 0.8;
+    }
+
+    .cost-display.hidden {
+      display: none;
+    }
+
+    .cost-item {
+      display: flex;
+      align-items: center;
+      gap: 0.4rem;
+    }
+
+    .cost-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      width: 3.5em;
+    }
+
+    .cost-value {
+      color: var(--fg);
+    }
+
+    /* Voice Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(45, 42, 36, 0.4);
+      backdrop-filter: blur(4px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      padding: 1rem;
+    }
+
+    .modal-overlay.hidden {
+      display: none;
+    }
+
+    .modal {
+      background: var(--surface);
+      border-radius: 8px;
+      width: 100%;
+      max-width: 440px;
+      max-height: 70vh;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.25rem 1.5rem;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .modal-header h3 {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      text-transform: uppercase;
+      color: var(--fg);
+    }
+
+    .modal-close {
+      background: none;
+      border: none;
+      font-size: 1.25rem;
+      color: var(--fg-muted);
+      cursor: pointer;
+      line-height: 1;
+      padding: 0;
+      transition: color 0.15s ease;
+    }
+
+    .modal-close:hover {
+      color: var(--fg);
+    }
+
+    .modal-body {
+      padding: 1rem;
+      overflow-y: auto;
+    }
+
+    .voice-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+    }
+
+    .voice-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.65rem 0.9rem;
+      background: var(--bg);
+      border: 1px solid transparent;
+      border-radius: 4px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+
+    .voice-item:hover {
+      background: var(--bg-warm);
+    }
+
+    .voice-item.selected {
+      border-color: var(--accent);
+      background: rgba(196, 90, 59, 0.1);
+    }
+
+    .voice-radio {
+      width: 14px;
+      height: 14px;
+      border: 1.5px solid var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .voice-item.selected .voice-radio {
+      border-color: var(--accent);
+    }
+
+    .voice-item.selected .voice-radio::after {
+      content: '';
+      width: 6px;
+      height: 6px;
+      background: var(--accent);
+      border-radius: 50%;
+    }
+
+    .voice-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .voice-name {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 500;
+      color: var(--fg);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .voice-lang {
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      color: var(--fg-muted);
+      margin-top: 0.1rem;
+    }
+
+    .voice-preview {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--fg-muted);
+      padding: 0.35rem 0.6rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.6rem;
+      font-weight: 500;
+      border-radius: 3px;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      flex-shrink: 0;
+    }
+
+    .voice-preview:hover {
+      border-color: var(--fg-muted);
+      color: var(--fg);
+    }
+
+    /* Error Toast */
+    .error-toast {
+      position: fixed;
+      bottom: 6rem;
+      left: 50%;
+      transform: translateX(-50%) translateY(20px);
+      background: var(--surface);
+      border: 1px solid var(--accent);
+      padding: 0.75rem 1.25rem;
+      font-family: 'IBM Plex Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--accent);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 200;
+      border-radius: 4px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+      pointer-events: none;
+    }
+
+    .error-toast.visible {
+      opacity: 1;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; }
+      to { opacity: 1; }
+    }
+
+    /* Mobile */
     @media (max-width: 600px) {
-      .chat-screen {
-        padding: 4rem 1.25rem 9rem;
+      .main-button {
+        width: 72px;
+        height: 72px;
       }
 
-      .message-text {
-        font-size: 1.1rem;
-        line-height: 1.75;
+      .hint-text {
+        display: none;
       }
 
-      .control-btn {
-        width: 60px;
-        height: 60px;
-      }
-
-      .floating-controls {
+      .bottom-controls {
         bottom: 1.5rem;
+      }
+
+      .cost-display {
+        left: 1rem;
+        font-size: 0.55rem;
       }
 
       .settings-menu {
         top: 1rem;
         right: 1rem;
-      }
-
-      .empty-state .desktop-only {
-        display: none;
       }
     }
   </style>
@@ -1012,71 +702,11 @@
     <button class="login-btn" id="loginBtn">Connect with OpenRouter</button>
   </div>
 
-  <!-- Chat Screen -->
-  <div class="chat-screen hidden" id="chatScreen">
-    <div class="transcript-area" id="transcriptArea">
-      <div class="empty-state" id="emptyState">
-        <p>Press the button<span class="desktop-only"> or spacebar</span> to speak</p>
-        <p class="hint">Your conversation will appear here</p>
-      </div>
-    </div>
-  </div>
-
-  <!-- Settings menu - top right -->
-  <div class="settings-menu hidden" id="settingsMenu">
-    <button class="settings-menu-btn" id="settingsMenuBtn" title="Settings">
-      <svg viewBox="0 0 24 24">
-        <circle cx="12" cy="5" r="1.5"/>
-        <circle cx="12" cy="12" r="1.5"/>
-        <circle cx="12" cy="19" r="1.5"/>
-      </svg>
-    </button>
-    <div class="settings-dropdown" id="settingsDropdown">
-      <button id="voiceSettingsBtn">
-        <svg viewBox="0 0 24 24">
-          <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
-          <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
-        </svg>
-        Voice
-      </button>
-      <div class="divider"></div>
-      <button id="logoutBtn">
-        <svg viewBox="0 0 24 24">
-          <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-          <polyline points="16 17 21 12 16 7"/>
-          <line x1="21" y1="12" x2="9" y2="12"/>
-        </svg>
-        Logout
-      </button>
-    </div>
-  </div>
-
-  <!-- Floating Controls -->
-  <div class="floating-controls hidden" id="floatingControls">
-    <!-- Left-side controls -->
-    <div class="floating-left">
-      <!-- Search toggle (hidden when stop button shown) -->
-      <button class="search-toggle" id="searchToggle" title="Enable web search">
-        <svg viewBox="0 0 24 24">
-          <circle cx="11" cy="11" r="8"/>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
-        </svg>
-        <span class="search-toggle-label">Search</span>
-      </button>
-      <!-- Stop speech button -->
-      <button class="stop-speech-btn hidden" id="stopSpeechBtn">Stop</button>
-    </div>
-
-    <!-- Main mic button with waveform (always centered) -->
-    <div style="position: relative;">
-      <div class="waveform" id="waveform">
-        <div class="waveform-bar"></div>
-        <div class="waveform-bar"></div>
-        <div class="waveform-bar"></div>
-        <div class="waveform-bar"></div>
-        <div class="waveform-bar"></div>
-      </div>
-      <button class="control-btn" id="controlBtn">
+  <!-- Main Voice Screen -->
+  <div class="voice-screen hidden" id="voiceScreen">
+    <!-- The Button -->
+    <div class="button-container">
+      <button class="main-button" id="mainButton">
         <svg class="mic-icon" viewBox="0 0 24 24">
           <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
           <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
@@ -1088,844 +718,128 @@
         </svg>
         <div class="spinner-icon"></div>
       </button>
+      <div class="status-text" id="statusText">Ready</div>
     </div>
 
-    <!-- Right-side controls -->
-    <div class="floating-right">
-      <!-- Text input button -->
-      <button class="float-btn" id="textInputBtn" title="Type message">
+    <!-- Hint -->
+    <div class="hint-text" id="hintText">
+      Press <kbd>space</kbd> or tap the button to speak
+    </div>
+
+    <!-- Settings menu - top right -->
+    <div class="settings-menu" id="settingsMenu">
+      <button class="settings-menu-btn" id="settingsMenuBtn" title="Settings">
         <svg viewBox="0 0 24 24">
-          <rect x="2" y="4" width="20" height="16" rx="2"/>
-          <line x1="6" y1="8" x2="18" y2="8"/>
-          <line x1="6" y1="12" x2="14" y2="12"/>
-          <line x1="6" y1="16" x2="10" y2="16"/>
+          <circle cx="12" cy="5" r="1.5"/>
+          <circle cx="12" cy="12" r="1.5"/>
+          <circle cx="12" cy="19" r="1.5"/>
         </svg>
+      </button>
+      <div class="settings-dropdown" id="settingsDropdown">
+        <button id="voiceSettingsBtn">
+          <svg viewBox="0 0 24 24">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"/>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"/>
+          </svg>
+          Voice
+        </button>
+        <div class="divider"></div>
+        <button id="logoutBtn">
+          <svg viewBox="0 0 24 24">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+            <polyline points="16 17 21 12 16 7"/>
+            <line x1="21" y1="12" x2="9" y2="12"/>
+          </svg>
+          Logout
+        </button>
+      </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls" id="bottomControls">
+      <button class="control-pill search-pill" id="searchToggle">
+        <svg viewBox="0 0 24 24">
+          <circle cx="11" cy="11" r="8"/>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"/>
+        </svg>
+        <span>Web Search</span>
+        <span class="status-indicator" id="searchStatus">off</span>
+      </button>
+      <button class="control-pill stop-pill hidden" id="stopBtn">
+        <svg viewBox="0 0 24 24">
+          <rect x="6" y="6" width="12" height="12" rx="1"/>
+        </svg>
+        <span>Stop</span>
       </button>
     </div>
   </div>
 
-  <!-- Text Input Bar -->
-  <div class="text-input-bar" id="textInputBar">
-    <button class="close-btn" id="textInputClose" title="Close">
-      <svg viewBox="0 0 24 24">
-        <line x1="18" y1="6" x2="6" y2="18"/>
-        <line x1="6" y1="6" x2="18" y2="18"/>
-      </svg>
-    </button>
-    <input type="text" id="textInput" placeholder="Type your message..." autocomplete="off">
-    <button class="send-btn" id="textSendBtn" title="Send">
-      <svg viewBox="0 0 24 24">
-        <line x1="22" y1="2" x2="11" y2="13"/>
-        <polygon points="22 2 15 22 11 13 2 9 22 2"/>
-      </svg>
-    </button>
+  <!-- Cost Display -->
+  <div class="cost-display hidden" id="costDisplay">
+    <div class="cost-item">
+      <span class="cost-label">Last</span>
+      <span class="cost-value" id="costLast">$0.00000</span>
+    </div>
+    <div class="cost-item">
+      <span class="cost-label">Total</span>
+      <span class="cost-value" id="costTotal">$0.00000</span>
+    </div>
   </div>
 
   <div class="error-toast" id="errorToast"></div>
-
-  <!-- Cost Display -->
-  <div class="cost-display hidden" id="costDisplay">
-    <div class="cost-row">
-      <span class="cost-label">Last</span>
-      <span class="cost-value" id="costLast">$0.000000</span>
-    </div>
-    <div class="cost-row">
-      <span class="cost-label">Total</span>
-      <span class="cost-value" id="costTotal">$0.000000</span>
-    </div>
-  </div>
 
   <script>
     // ============ Configuration ============
     const OPENROUTER_AUTH_URL = 'https://openrouter.ai/auth';
     const OPENROUTER_API_URL = 'https://openrouter.ai/api/v1';
-    // Models that stream well: anthropic/claude-3-haiku, openai/gpt-4o-mini, google/gemini-3-flash-preview
     const MODEL = 'google/gemini-3-flash-preview';
     const MODEL_ONLINE = 'google/gemini-3-flash-preview:online';
-
-    function getModel() {
-      if (webSearchEnabled) {
-        console.log('Using online model (web search enabled)');
-        return MODEL_ONLINE;
-      }
-      return MODEL;
-    }
     const CALLBACK_URL = window.location.origin + window.location.pathname;
 
     // ============ State ============
     let apiKey = localStorage.getItem('openrouter_api_key');
     let isListening = false;
     let conversationHistory = [];
-
-    // Audio recording state
     let mediaRecorder = null;
     let audioChunks = [];
     let audioStream = null;
-
-    // ============ DOM Elements ============
-    const loginScreen = document.getElementById('loginScreen');
-    const chatScreen = document.getElementById('chatScreen');
-    const floatingControls = document.getElementById('floatingControls');
-    const settingsMenu = document.getElementById('settingsMenu');
-    const loginBtn = document.getElementById('loginBtn');
-    const logoutBtn = document.getElementById('logoutBtn');
-    const settingsMenuBtn = document.getElementById('settingsMenuBtn');
-    const settingsDropdown = document.getElementById('settingsDropdown');
-    const voiceSettingsBtn = document.getElementById('voiceSettingsBtn');
-    const voiceModal = document.getElementById('voiceModal');
-    const modalClose = document.getElementById('modalClose');
-    const voiceList = document.getElementById('voiceList');
-    const controlBtn = document.getElementById('controlBtn');
-    const stopSpeechBtn = document.getElementById('stopSpeechBtn');
-    const searchToggle = document.getElementById('searchToggle');
-    const textInputBtn = document.getElementById('textInputBtn');
-    const textInputBar = document.getElementById('textInputBar');
-    const textInput = document.getElementById('textInput');
-    const textSendBtn = document.getElementById('textSendBtn');
-    const textInputClose = document.getElementById('textInputClose');
-    const emptyState = document.getElementById('emptyState');
-    const transcriptArea = document.getElementById('transcriptArea');
-    const waveform = document.getElementById('waveform');
-    const errorToast = document.getElementById('errorToast');
-    const costDisplay = document.getElementById('costDisplay');
-    const costLast = document.getElementById('costLast');
-    const costTotal = document.getElementById('costTotal');
-
-    // Selected voice (stored in localStorage)
     let selectedVoiceName = localStorage.getItem('selectedVoice') || null;
-
-    // Web search toggle (stored in localStorage)
     let webSearchEnabled = localStorage.getItem('webSearchEnabled') === 'true';
-
-    // Speech queue for streaming TTS
     let speechQueue = [];
     let isSpeaking = false;
     let shouldStopSpeaking = false;
-    let spokenText = ''; // Track what was actually spoken
-    let fullResponseText = ''; // Track the full response
 
-    // Auto-scroll state
-    let userHasScrolled = false;
-    let lastScrollTop = 0;
-
-    // ============ Stats Tracking ============
+    // Stats
     const stats = {
-      totalInputTokens: 0,
-      totalOutputTokens: 0,
       totalCost: 0,
-      latencies: [],
-      lastResponse: {
-        inputTokens: 0,
-        outputTokens: 0,
-        cost: 0,
-        latencyMs: 0
-      }
+      lastCost: 0
     };
 
-    // Pricing per million tokens (Gemini 2.5 Flash Preview)
-    const PRICING = {
-      input: 0.15 / 1000000,   // $0.15 per 1M input tokens
-      output: 0.60 / 1000000   // $0.60 per 1M output tokens (non-thinking)
-    };
-
-    function logStats() {
-      const latencies = stats.latencies;
-      const minLatency = latencies.length > 0 ? Math.min(...latencies) : 0;
-      const maxLatency = latencies.length > 0 ? Math.max(...latencies) : 0;
-      const avgLatency = latencies.length > 0 ? latencies.reduce((a, b) => a + b, 0) / latencies.length : 0;
-
-      console.log('%c📊 Response Stats', 'font-weight: bold; font-size: 14px;');
-      console.log(`   Last response:`);
-      console.log(`     Tokens: ${stats.lastResponse.inputTokens} in / ${stats.lastResponse.outputTokens} out`);
-      console.log(`     Cost: $${stats.lastResponse.cost.toFixed(6)}`);
-      console.log(`     Latency: ${stats.lastResponse.latencyMs}ms`);
-      console.log(`   Session totals:`);
-      console.log(`     Tokens: ${stats.totalInputTokens} in / ${stats.totalOutputTokens} out`);
-      console.log(`     Cost: $${stats.totalCost.toFixed(6)}`);
-      console.log(`     Latency (min/avg/max): ${minLatency}ms / ${Math.round(avgLatency)}ms / ${maxLatency}ms`);
-      console.log(`     Requests: ${latencies.length}`);
-
-      // Update UI
-      updateCostDisplay();
-    }
-
-    function updateCostDisplay() {
-      costDisplay.classList.remove('hidden');
-
-      // Update last cost with highlight animation
-      costLast.textContent = `$${stats.lastResponse.cost.toFixed(6)}`;
-      costLast.classList.remove('highlight');
-      void costLast.offsetWidth; // Trigger reflow to restart animation
-      costLast.classList.add('highlight');
-
-      // Update total cost
-      costTotal.textContent = `$${stats.totalCost.toFixed(6)}`;
-    }
-
-    function updateStats(usage, latencyMs) {
-      const inputTokens = usage?.prompt_tokens || 0;
-      const outputTokens = usage?.completion_tokens || 0;
-      const cost = (inputTokens * PRICING.input) + (outputTokens * PRICING.output);
-
-      stats.lastResponse = {
-        inputTokens,
-        outputTokens,
-        cost,
-        latencyMs
-      };
-
-      stats.totalInputTokens += inputTokens;
-      stats.totalOutputTokens += outputTokens;
-      stats.totalCost += cost;
-      stats.latencies.push(latencyMs);
-
-      logStats();
-    }
-
-    // ============ Gemini Audio Recording ============
-    async function startGeminiRecording() {
-      try {
-        audioChunks = [];
-        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
-
-        // Try mp4/aac first (Safari), then webm (Chrome/Firefox)
-        // We'll convert to WAV before sending since Gemini supports wav but not webm
-        let mimeType = 'audio/webm';
-        if (MediaRecorder.isTypeSupported('audio/mp4')) {
-          mimeType = 'audio/mp4';
-        } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
-          mimeType = 'audio/webm;codecs=opus';
-        }
-        console.log('Recording with mimeType:', mimeType);
-
-        mediaRecorder = new MediaRecorder(audioStream, { mimeType });
-
-        mediaRecorder.ondataavailable = (event) => {
-          if (event.data.size > 0) {
-            audioChunks.push(event.data);
-          }
-        };
-
-        mediaRecorder.onstop = async () => {
-          const audioBlob = new Blob(audioChunks, { type: mimeType });
-          console.log('Audio recorded:', audioBlob.size, 'bytes, type:', mimeType);
-
-          // Stop all tracks
-          audioStream.getTracks().forEach(track => track.stop());
-          audioStream = null;
-
-          // Convert to WAV format (which Gemini supports)
-          try {
-            const wavBlob = await convertToWav(audioBlob);
-            console.log('Converted to WAV:', wavBlob.size, 'bytes');
-            const base64Audio = await blobToBase64(wavBlob);
-            await sendAudioToGemini(base64Audio, 'wav');
-          } catch (e) {
-            console.error('Audio conversion error:', e);
-            showError('Failed to process audio');
-            setStatus('ready', 'Ready');
-          }
-        };
-
-        mediaRecorder.start();
-        console.log('Gemini recording started');
-
-        isListening = true;
-        controlBtn.classList.add('listening');
-        waveform.classList.add('active');
-        setStatus('listening', 'Recording...');
-
-      } catch (error) {
-        console.error('Error starting Gemini recording:', error);
-        showError('Microphone access denied');
-        setStatus('ready', 'Ready');
-      }
-    }
-
-    function stopGeminiRecording() {
-      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
-        mediaRecorder.stop();
-        console.log('Gemini recording stopped');
-      }
-
-      isListening = false;
-      controlBtn.classList.remove('listening');
-      controlBtn.classList.add('processing');
-      waveform.classList.remove('active');
-      setStatus('processing', 'Processing audio...');
-    }
-
-    function blobToBase64(blob) {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          // Remove the data URL prefix (e.g., "data:audio/webm;base64,")
-          const base64 = reader.result.split(',')[1];
-          resolve(base64);
-        };
-        reader.onerror = reject;
-        reader.readAsDataURL(blob);
-      });
-    }
-
-    async function convertToWav(audioBlob) {
-      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
-      const arrayBuffer = await audioBlob.arrayBuffer();
-      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
-
-      // Convert to WAV
-      const wavBuffer = audioBufferToWav(audioBuffer);
-      return new Blob([wavBuffer], { type: 'audio/wav' });
-    }
-
-    function audioBufferToWav(buffer) {
-      const numChannels = buffer.numberOfChannels;
-      const sampleRate = buffer.sampleRate;
-      const format = 1; // PCM
-      const bitDepth = 16;
-
-      // Interleave channels
-      let interleaved;
-      if (numChannels === 2) {
-        const left = buffer.getChannelData(0);
-        const right = buffer.getChannelData(1);
-        interleaved = new Float32Array(left.length + right.length);
-        for (let i = 0, j = 0; i < left.length; i++, j += 2) {
-          interleaved[j] = left[i];
-          interleaved[j + 1] = right[i];
-        }
-      } else {
-        interleaved = buffer.getChannelData(0);
-      }
-
-      // Create WAV file
-      const dataLength = interleaved.length * (bitDepth / 8);
-      const wavBuffer = new ArrayBuffer(44 + dataLength);
-      const view = new DataView(wavBuffer);
-
-      // WAV header
-      writeString(view, 0, 'RIFF');
-      view.setUint32(4, 36 + dataLength, true);
-      writeString(view, 8, 'WAVE');
-      writeString(view, 12, 'fmt ');
-      view.setUint32(16, 16, true); // fmt chunk size
-      view.setUint16(20, format, true);
-      view.setUint16(22, numChannels, true);
-      view.setUint32(24, sampleRate, true);
-      view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
-      view.setUint16(32, numChannels * (bitDepth / 8), true);
-      view.setUint16(34, bitDepth, true);
-      writeString(view, 36, 'data');
-      view.setUint32(40, dataLength, true);
-
-      // Write audio data
-      const offset = 44;
-      for (let i = 0; i < interleaved.length; i++) {
-        const sample = Math.max(-1, Math.min(1, interleaved[i]));
-        const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
-        view.setInt16(offset + i * 2, intSample, true);
-      }
-
-      return wavBuffer;
-    }
-
-    function writeString(view, offset, string) {
-      for (let i = 0; i < string.length; i++) {
-        view.setUint8(offset + i, string.charCodeAt(i));
-      }
-    }
-
-    async function sendAudioToGemini(base64Audio, format) {
-      const requestStartTime = performance.now();
-
-      // Reset speech state
-      shouldStopSpeaking = false;
-      speechQueue = [];
-      spokenText = '';
-      fullResponseText = '';
-
-      try {
-        const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.origin,
-            'X-Title': 'Voice Chat'
-          },
-          body: JSON.stringify({
-            model: getModel(),
-            stream: true,
-            messages: [
-              {
-                role: 'system',
-                content: buildSystemPrompt()
-              },
-              ...conversationHistory,
-              {
-                role: 'user',
-                content: [
-                  {
-                    type: 'text',
-                    text: 'Please listen to this audio and respond to what the user is saying.'
-                  },
-                  {
-                    type: 'input_audio',
-                    input_audio: {
-                      data: base64Audio,
-                      format: format
-                    }
-                  }
-                ]
-              }
-            ]
-          })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error?.message || 'API request failed');
-        }
-
-        // Add placeholder user message (will be updated with transcription)
-        const userMessageEl = document.createElement('div');
-        userMessageEl.className = 'message user';
-        userMessageEl.innerHTML = `
-          <div class="message-label">You</div>
-          <div class="message-text" style="color: var(--fg-muted); font-style: italic;">[listening...]</div>
-        `;
-        hideEmptyState();
-        transcriptArea.appendChild(userMessageEl);
-        const userMessageTextEl = userMessageEl.querySelector('.message-text');
-
-        // Create message element for streaming response
-        const messageEl = document.createElement('div');
-        messageEl.className = 'message assistant';
-        messageEl.innerHTML = `
-          <div class="message-label">AI</div>
-          <div class="message-text"></div>
-        `;
-        transcriptArea.appendChild(messageEl);
-        const messageTextEl = messageEl.querySelector('.message-text');
-
-        // Process stream (same as regular sendMessage)
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullResponse = '';
-        let sentenceBuffer = '';
-        let buffer = '';
-        let usage = null;
-        let userTranscript = null;
-        let transcriptExtracted = false;
-
-        setStatus('speaking', 'Speaking...');
-        controlBtn.classList.remove('processing');
-        searchToggle.classList.add('hidden');
-        stopSpeechBtn.classList.remove('hidden');
-        userHasScrolled = false;
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          buffer += chunk;
-
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
-
-            const data = trimmedLine.slice(6);
-            if (data === '[DONE]') continue;
-
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.usage) {
-                usage = parsed.usage;
-              }
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                fullResponse += content;
-                fullResponseText = fullResponse;
-
-                // Try to extract user transcript from [USER]...[/USER] tags
-                if (!transcriptExtracted) {
-                  const transcriptMatch = fullResponse.match(/\[USER\]\s*([\s\S]*?)\s*\[\/USER\]/);
-                  if (transcriptMatch) {
-                    userTranscript = transcriptMatch[1].trim();
-                    transcriptExtracted = true;
-                    // Update user message with transcript
-                    userMessageTextEl.style.color = '';
-                    userMessageTextEl.style.fontStyle = '';
-                    userMessageTextEl.textContent = userTranscript;
-                  }
-                }
-
-                // Display only the response part (after [/USER] tag, or full response if no tags)
-                let displayResponse = fullResponse;
-                if (transcriptExtracted) {
-                  const endTagIndex = fullResponse.indexOf('[/USER]');
-                  if (endTagIndex !== -1) {
-                    displayResponse = fullResponse.slice(endTagIndex + 7).trim();
-                  }
-                }
-
-                // Only add to sentence buffer the response part (not transcript)
-                // Don't speak anything until we've extracted the transcript
-                if (transcriptExtracted) {
-                  const endTagIndex = fullResponse.indexOf('[/USER]');
-                  if (endTagIndex !== -1) {
-                    const responseOnly = fullResponse.slice(endTagIndex + 7);
-                    // Calculate what's new since last time
-                    const prevFullResponse = fullResponse.slice(0, -content.length);
-                    const prevEndTagIndex = prevFullResponse.indexOf('[/USER]');
-                    const prevResponseOnly = prevEndTagIndex !== -1
-                      ? prevFullResponse.slice(prevEndTagIndex + 7)
-                      : '';
-                    if (responseOnly.length > prevResponseOnly.length) {
-                      sentenceBuffer += responseOnly.slice(prevResponseOnly.length);
-                    }
-                  }
-                }
-                // If transcript not yet extracted, don't add to sentence buffer at all
-
-                messageTextEl.innerHTML = parseMarkdown(displayResponse);
-
-                if (!userHasScrolled) {
-                  window.scrollTo(0, document.body.scrollHeight);
-                }
-
-                // Speak sentences (only from response, not transcript)
-                const sentenceMatch = sentenceBuffer.match(/^(.*?[.!?])\s*/);
-                if (sentenceMatch) {
-                  const sentence = sentenceMatch[1];
-                  sentenceBuffer = sentenceBuffer.slice(sentenceBuffer.indexOf(sentenceMatch[0]) + sentenceMatch[0].length);
-                  queueSpeech(sentence);
-                }
-              }
-            } catch (e) {
-              // Parse error, skip
-            }
-          }
-        }
-
-        // Speak remaining
-        if (sentenceBuffer.trim()) {
-          queueSpeech(sentenceBuffer.trim());
-        }
-
-        // Log stats
-        const latencyMs = Math.round(performance.now() - requestStartTime);
-        updateStats(usage, latencyMs);
-
-        // Debug: log full model response
-        console.log('=== FULL MODEL RESPONSE ===');
-        console.log(fullResponse);
-        console.log('=== END RESPONSE ===');
-
-        // Strip the [USER]...[/USER] transcript tags to get response only
-        let responseOnly = fullResponse;
-        const endTagIndex = fullResponse.indexOf('[/USER]');
-        if (endTagIndex !== -1) {
-          responseOnly = fullResponse.slice(endTagIndex + 7).trim();
-        }
-        const cleanResponse = stripSpeechHints(responseOnly);
-        messageTextEl.innerHTML = parseMarkdown(cleanResponse);
-
-        // Use actual transcript in conversation history if we have it
-        const userContent = userTranscript || '[voice message]';
-
-        // Add to conversation history
-        conversationHistory.push({ role: 'user', content: userContent });
-        conversationHistory.push({ role: 'assistant', content: cleanResponse });
-
-      } catch (error) {
-        console.error('Gemini audio API error:', error);
-        showError(error.message);
-        setStatus('ready', 'Ready');
-        controlBtn.classList.remove('processing');
-        searchToggle.classList.remove('hidden');
-        stopSpeechBtn.classList.add('hidden');
-      }
-    }
-
-    // ============ Text Input Mode ============
-    async function sendTextMessage(text) {
-      if (!text.trim()) return;
-
-      const requestStartTime = performance.now();
-
-      // Reset speech state
-      shouldStopSpeaking = false;
-      speechQueue = [];
-      spokenText = '';
-      fullResponseText = '';
-
-      // Close text input bar
-      textInputBar.classList.remove('open');
-      textInput.value = '';
-
-      // Show processing state
-      controlBtn.classList.add('processing');
-
-      try {
-        // Select model based on text content
-        const selectedModel = getModel();
-
-        const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.origin,
-            'X-Title': 'Voice Chat'
-          },
-          body: JSON.stringify({
-            model: selectedModel,
-            stream: true,
-            messages: [
-              {
-                role: 'system',
-                content: buildSystemPrompt()
-              },
-              ...conversationHistory,
-              {
-                role: 'user',
-                content: text
-              }
-            ]
-          })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error?.message || 'API request failed');
-        }
-
-        // Add user message
-        hideEmptyState();
-        addMessage('user', text);
-
-        // Create message element for streaming response
-        const messageEl = document.createElement('div');
-        messageEl.className = 'message assistant';
-        messageEl.innerHTML = `
-          <div class="message-label">AI</div>
-          <div class="message-text"></div>
-        `;
-        transcriptArea.appendChild(messageEl);
-        const messageTextEl = messageEl.querySelector('.message-text');
-
-        // Process stream
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullResponse = '';
-        let sentenceBuffer = '';
-        let buffer = '';
-        let usage = null;
-
-        setStatus('speaking', 'Speaking...');
-        controlBtn.classList.remove('processing');
-        searchToggle.classList.add('hidden');
-        stopSpeechBtn.classList.remove('hidden');
-        userHasScrolled = false;
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) break;
-
-          const chunk = decoder.decode(value, { stream: true });
-          buffer += chunk;
-
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || '';
-
-          for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
-
-            const data = trimmedLine.slice(6);
-            if (data === '[DONE]') continue;
-
-            try {
-              const parsed = JSON.parse(data);
-              if (parsed.usage) {
-                usage = parsed.usage;
-              }
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                fullResponse += content;
-                fullResponseText = fullResponse;
-                sentenceBuffer += content;
-                messageTextEl.innerHTML = parseMarkdown(fullResponse);
-
-                if (!userHasScrolled) {
-                  window.scrollTo(0, document.body.scrollHeight);
-                }
-
-                // Speak sentences
-                const sentenceMatch = sentenceBuffer.match(/^(.*?[.!?])\s*/);
-                if (sentenceMatch) {
-                  const sentence = sentenceMatch[1];
-                  sentenceBuffer = sentenceBuffer.slice(sentenceBuffer.indexOf(sentenceMatch[0]) + sentenceMatch[0].length);
-                  queueSpeech(sentence);
-                }
-              }
-            } catch (e) {
-              // Parse error, skip
-            }
-          }
-        }
-
-        // Speak any remaining text
-        if (sentenceBuffer.trim()) {
-          queueSpeech(sentenceBuffer.trim());
-        }
-
-        // Log stats
-        if (usage) {
-          const latency = Math.round(performance.now() - requestStartTime);
-          const cost = calculateCost(usage);
-          console.log(`Tokens: ${usage.prompt_tokens} in / ${usage.completion_tokens} out | Cost: $${cost.toFixed(6)} | Latency: ${latency}ms`);
-          updateCostDisplay(cost);
-        }
-
-        // Debug: log full model response
-        console.log('=== FULL MODEL RESPONSE ===');
-        console.log(fullResponse);
-        console.log('=== END RESPONSE ===');
-
-        // Clean response for display and history
-        const cleanResponse = stripSpeechHints(fullResponse);
-        messageTextEl.innerHTML = parseMarkdown(cleanResponse);
-
-        // Add to conversation history
-        conversationHistory.push({ role: 'user', content: text });
-        conversationHistory.push({ role: 'assistant', content: cleanResponse });
-
-      } catch (error) {
-        console.error('Text message API error:', error);
-        showError(error.message);
-        setStatus('ready', 'Ready');
-        controlBtn.classList.remove('processing');
-        searchToggle.classList.remove('hidden');
-        stopSpeechBtn.classList.add('hidden');
-      }
-    }
-
-    function openTextInput() {
-      textInputBar.classList.add('open');
-      textInput.focus();
-    }
-
-    function closeTextInput() {
-      textInputBar.classList.remove('open');
-      textInput.value = '';
-    }
-
-    function buildSystemPrompt() {
-      const today = new Date().toLocaleDateString('en-US', {
-        weekday: 'long',
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric'
-      });
-
-      return `You are a helpful voice assistant running in voice mode. Today is ${today}.
-
-INPUT: You receive audio directly from the user's microphone. You MUST transcribe what the user said and include it at the start of your response using this exact format:
-
-[USER]
-<transcription of what the user said>
-[/USER]
-
-Then provide your response after the closing tag. This transcription helps the user see what you heard. If the audio is unclear or silent, still include the tags with a note like "(unclear audio)" or "(no speech detected)".
-
-Expect occasional background noise or unclear speech. If something doesn't make sense, politely ask the user to repeat or confirm.
-
-OUTPUT: Your responses are displayed as text AND converted to speech. Write naturally readable text, but when something needs to be spoken differently, add a speech hint in double brackets immediately after.
-
-SPEECH HINT FORMAT: text [[spoken version]]
-Examples:
-- "version 2.0 [[version two point oh]]"
-- "the /etc/config [[the etsy config]] directory"
-- "$49.99 [[forty-nine ninety-nine]]"
-- "NASA [[nasa]]" (acronyms that should be spoken as words)
-- "API [[A P I]]" (acronyms that should be spelled out)
-- "Dr. Smith [[Doctor Smith]]"
-
-Guidelines:
-- Use markdown freely for formatting (headers, bold, lists, code blocks) - it will be stripped for speech
-- Include URLs/links normally in text - they'll be removed for speech
-- Add [[speech hints]] for: version numbers, file paths, prices, technical identifiers, abbreviations, symbols
-- Keep responses concise and conversational
-- Don't over-annotate common words - only add hints where pronunciation differs significantly
-
-Respond naturally as if having a spoken conversation.`;
-    }
-
-    // Simple markdown parser
-    function parseMarkdown(text) {
-      // First strip speech hints [[...]] for display
-      let cleaned = stripSpeechHints(text);
-
-      return cleaned
-        // Escape HTML
-        .replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        // Code blocks (before other processing)
-        .replace(/```(\w*)\n([\s\S]*?)```/g, '<pre><code>$2</code></pre>')
-        // Inline code
-        .replace(/`([^`]+)`/g, '<code>$1</code>')
-        // Bold
-        .replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>')
-        .replace(/__([^_]+)__/g, '<strong>$1</strong>')
-        // Italic
-        .replace(/\*([^*]+)\*/g, '<em>$1</em>')
-        .replace(/_([^_]+)_/g, '<em>$1</em>')
-        // Links
-        .replace(/\[([^\]]+)\]\(([^)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>')
-        // Unordered lists
-        .replace(/^\* (.+)$/gm, '<li>$1</li>')
-        .replace(/^- (.+)$/gm, '<li>$1</li>')
-        // Ordered lists
-        .replace(/^\d+\. (.+)$/gm, '<li>$1</li>')
-        // Wrap consecutive <li> in <ul>
-        .replace(/(<li>.*<\/li>\n?)+/g, '<ul>$&</ul>')
-        // Blockquotes
-        .replace(/^> (.+)$/gm, '<blockquote>$1</blockquote>')
-        // Paragraphs (double newlines)
-        .replace(/\n\n/g, '</p><p>')
-        // Single newlines to <br> within paragraphs
-        .replace(/\n/g, '<br>')
-        // Wrap in paragraph
-        .replace(/^(.+)$/s, '<p>$1</p>')
-        // Clean up empty paragraphs
-        .replace(/<p><\/p>/g, '')
-        .replace(/<p>(<ul>)/g, '$1')
-        .replace(/(<\/ul>)<\/p>/g, '$1')
-        .replace(/<p>(<pre>)/g, '$1')
-        .replace(/(<\/pre>)<\/p>/g, '$1')
-        .replace(/<p>(<blockquote>)/g, '$1')
-        .replace(/(<\/blockquote>)<\/p>/g, '$1');
-    }
-
-    // ============ Search Toggle ============
-    function updateSearchToggleUI() {
-      if (webSearchEnabled) {
-        searchToggle.classList.add('active');
-      } else {
-        searchToggle.classList.remove('active');
-      }
-    }
+    // ============ DOM Elements ============
+    const loginScreen = document.getElementById('loginScreen');
+    const voiceScreen = document.getElementById('voiceScreen');
+    const loginBtn = document.getElementById('loginBtn');
+    const logoutBtn = document.getElementById('logoutBtn');
+    const mainButton = document.getElementById('mainButton');
+    const statusText = document.getElementById('statusText');
+    const hintText = document.getElementById('hintText');
+    const settingsMenu = document.getElementById('settingsMenu');
+    const settingsMenuBtn = document.getElementById('settingsMenuBtn');
+    const settingsDropdown = document.getElementById('settingsDropdown');
+    const voiceSettingsBtn = document.getElementById('voiceSettingsBtn');
+    const searchToggle = document.getElementById('searchToggle');
+    const searchStatus = document.getElementById('searchStatus');
+    const stopBtn = document.getElementById('stopBtn');
+    const voiceModal = document.getElementById('voiceModal');
+    const modalClose = document.getElementById('modalClose');
+    const voiceList = document.getElementById('voiceList');
+    const costDisplay = document.getElementById('costDisplay');
+    const costLast = document.getElementById('costLast');
+    const costTotal = document.getElementById('costTotal');
+    const errorToast = document.getElementById('errorToast');
 
     // ============ Initialization ============
     function init() {
-      // Check for OAuth callback
       const urlParams = new URLSearchParams(window.location.search);
       const code = urlParams.get('code');
 
@@ -1934,16 +848,13 @@ Respond naturally as if having a spoken conversation.`;
         return;
       }
 
-      // Check if already logged in
       if (apiKey) {
-        showChatScreen();
+        showVoiceScreen();
       } else {
         showLoginScreen();
       }
 
-      // Initialize UI state
       updateSearchToggleUI();
-
       setupEventListeners();
     }
 
@@ -1952,9 +863,7 @@ Respond naturally as if having a spoken conversation.`;
       const array = new Uint8Array(32);
       crypto.getRandomValues(array);
       return btoa(String.fromCharCode(...array))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     }
 
     async function generateCodeChallenge(verifier) {
@@ -1962,32 +871,21 @@ Respond naturally as if having a spoken conversation.`;
       const data = encoder.encode(verifier);
       const hash = await crypto.subtle.digest('SHA-256', data);
       return btoa(String.fromCharCode(...new Uint8Array(hash)))
-        .replace(/\+/g, '-')
-        .replace(/\//g, '_')
-        .replace(/=/g, '');
+        .replace(/\+/g, '-').replace(/\//g, '_').replace(/=/g, '');
     }
 
     async function startOAuthFlow() {
       const codeVerifier = generateCodeVerifier();
       const codeChallenge = await generateCodeChallenge(codeVerifier);
-
-      // Store verifier for later
       sessionStorage.setItem('code_verifier', codeVerifier);
-
       const authUrl = `${OPENROUTER_AUTH_URL}?callback_url=${encodeURIComponent(CALLBACK_URL)}&code_challenge=${codeChallenge}&code_challenge_method=S256`;
-
-      console.log('OAuth URL:', authUrl);
-      console.log('Callback URL:', CALLBACK_URL);
-      console.log('Code Challenge:', codeChallenge);
-
       window.location.href = authUrl;
     }
 
     async function handleOAuthCallback(code) {
       const codeVerifier = sessionStorage.getItem('code_verifier');
-
       if (!codeVerifier) {
-        showError('Authentication failed: missing verifier');
+        showError('Authentication failed');
         showLoginScreen();
         return;
       }
@@ -2003,19 +901,14 @@ Respond naturally as if having a spoken conversation.`;
           })
         });
 
-        if (!response.ok) {
-          throw new Error('Failed to exchange code for API key');
-        }
+        if (!response.ok) throw new Error('Failed to authenticate');
 
         const data = await response.json();
         apiKey = data.key;
         localStorage.setItem('openrouter_api_key', apiKey);
         sessionStorage.removeItem('code_verifier');
-
-        // Clean URL
         window.history.replaceState({}, document.title, window.location.pathname);
-
-        showChatScreen();
+        showVoiceScreen();
       } catch (error) {
         console.error('OAuth error:', error);
         showError('Authentication failed');
@@ -2027,59 +920,499 @@ Respond naturally as if having a spoken conversation.`;
       apiKey = null;
       localStorage.removeItem('openrouter_api_key');
       conversationHistory = [];
-      // Restore empty state
-      transcriptArea.innerHTML = `
-        <div class="empty-state" id="emptyState">
-          <p>Press the button<span class="desktop-only"> or spacebar</span> to speak</p>
-          <p class="hint">Your conversation will appear here</p>
-        </div>
-      `;
       showLoginScreen();
     }
 
     // ============ UI State ============
     function showLoginScreen() {
       loginScreen.classList.remove('hidden');
-      chatScreen.classList.add('hidden');
-      floatingControls.classList.add('hidden');
-      settingsMenu.classList.add('hidden');
+      voiceScreen.classList.add('hidden');
       costDisplay.classList.add('hidden');
     }
 
-    function showChatScreen() {
+    function showVoiceScreen() {
       loginScreen.classList.add('hidden');
-      chatScreen.classList.remove('hidden');
-      floatingControls.classList.remove('hidden');
-      settingsMenu.classList.remove('hidden');
+      voiceScreen.classList.remove('hidden');
     }
 
-    // Hide empty state when first message is added
-    function hideEmptyState() {
-      if (emptyState && emptyState.parentNode) {
-        emptyState.remove();
+    function setButtonState(state) {
+      mainButton.classList.remove('listening', 'processing', 'speaking');
+      statusText.classList.remove('listening', 'speaking');
+
+      switch (state) {
+        case 'listening':
+          mainButton.classList.add('listening');
+          statusText.classList.add('listening');
+          statusText.textContent = 'Listening';
+          hintText.classList.add('hidden');
+          break;
+        case 'processing':
+          mainButton.classList.add('processing');
+          statusText.textContent = 'Thinking';
+          hintText.classList.add('hidden');
+          break;
+        case 'speaking':
+          mainButton.classList.add('speaking');
+          statusText.classList.add('speaking');
+          statusText.textContent = 'Speaking';
+          hintText.classList.add('hidden');
+          break;
+        default:
+          statusText.textContent = 'Ready';
+          hintText.classList.remove('hidden');
       }
     }
 
-    // ============ Voice Settings ============
-    const SAMPLE_SENTENCE = "Hello! I'm your voice assistant. How can I help you today?";
+    function showError(message) {
+      errorToast.textContent = message;
+      errorToast.classList.add('visible');
+      setTimeout(() => errorToast.classList.remove('visible'), 4000);
+    }
 
+    function updateSearchToggleUI() {
+      searchToggle.classList.toggle('active', webSearchEnabled);
+      searchStatus.textContent = webSearchEnabled ? 'on' : 'off';
+    }
+
+    function updateCostDisplay() {
+      costDisplay.classList.remove('hidden');
+      costLast.textContent = `$${stats.lastCost.toFixed(5)}`;
+      costTotal.textContent = `$${stats.totalCost.toFixed(5)}`;
+    }
+
+    // ============ Audio Recording ============
+    async function startRecording() {
+      try {
+        audioChunks = [];
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        let mimeType = 'audio/webm';
+        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+        }
+
+        mediaRecorder = new MediaRecorder(audioStream, { mimeType });
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) audioChunks.push(event.data);
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: mimeType });
+          audioStream.getTracks().forEach(track => track.stop());
+          audioStream = null;
+
+          try {
+            const wavBlob = await convertToWav(audioBlob);
+            const base64Audio = await blobToBase64(wavBlob);
+            await sendAudioToAPI(base64Audio);
+          } catch (e) {
+            console.error('Audio conversion error:', e);
+            showError('Failed to process audio');
+            setButtonState('ready');
+          }
+        };
+
+        mediaRecorder.start();
+        isListening = true;
+        setButtonState('listening');
+        searchToggle.classList.add('hidden');
+
+      } catch (error) {
+        console.error('Microphone error:', error);
+        showError('Microphone access denied');
+        setButtonState('ready');
+      }
+    }
+
+    function stopRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+      }
+      isListening = false;
+      setButtonState('processing');
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => resolve(reader.result.split(',')[1]);
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function convertToWav(audioBlob) {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+      const wavBuffer = audioBufferToWav(audioBuffer);
+      return new Blob([wavBuffer], { type: 'audio/wav' });
+    }
+
+    function audioBufferToWav(buffer) {
+      const numChannels = buffer.numberOfChannels;
+      const sampleRate = buffer.sampleRate;
+      const format = 1;
+      const bitDepth = 16;
+
+      let interleaved;
+      if (numChannels === 2) {
+        const left = buffer.getChannelData(0);
+        const right = buffer.getChannelData(1);
+        interleaved = new Float32Array(left.length + right.length);
+        for (let i = 0, j = 0; i < left.length; i++, j += 2) {
+          interleaved[j] = left[i];
+          interleaved[j + 1] = right[i];
+        }
+      } else {
+        interleaved = buffer.getChannelData(0);
+      }
+
+      const dataLength = interleaved.length * (bitDepth / 8);
+      const wavBuffer = new ArrayBuffer(44 + dataLength);
+      const view = new DataView(wavBuffer);
+
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + dataLength, true);
+      writeString(view, 8, 'WAVE');
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, format, true);
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
+      view.setUint16(32, numChannels * (bitDepth / 8), true);
+      view.setUint16(34, bitDepth, true);
+      writeString(view, 36, 'data');
+      view.setUint32(40, dataLength, true);
+
+      for (let i = 0; i < interleaved.length; i++) {
+        const sample = Math.max(-1, Math.min(1, interleaved[i]));
+        view.setInt16(44 + i * 2, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+      }
+
+      return wavBuffer;
+    }
+
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    // ============ API Communication ============
+    function getModel() {
+      return webSearchEnabled ? MODEL_ONLINE : MODEL;
+    }
+
+    function buildSystemPrompt() {
+      const today = new Date().toLocaleDateString('en-US', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+      });
+
+      return `You are a voice assistant. Today is ${today}. You receive audio from the user's microphone and respond with spoken output.
+
+IMPORTANT: First transcribe what the user said using [USER]...[/USER] tags at the start of your response. This is required for the system to work. Example:
+
+[USER]
+What's the weather like?
+[/USER]
+
+Your response goes here...
+
+Your responses will be converted to speech, so:
+- Be concise and conversational
+- Avoid lists, bullet points, or complex formatting
+- Don't use special characters or symbols that don't speak well
+- For numbers, acronyms, or technical terms that might be mispronounced, add a pronunciation hint in double brackets immediately after: "API [[A P I]]" or "$50 [[fifty dollars]]"
+- Keep responses focused and to the point
+
+Respond naturally as if having a spoken conversation.`;
+    }
+
+    async function sendAudioToAPI(base64Audio) {
+      const requestStartTime = performance.now();
+      shouldStopSpeaking = false;
+      speechQueue = [];
+
+      try {
+        const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'Voice'
+          },
+          body: JSON.stringify({
+            model: getModel(),
+            stream: true,
+            messages: [
+              { role: 'system', content: buildSystemPrompt() },
+              ...conversationHistory,
+              {
+                role: 'user',
+                content: [
+                  { type: 'text', text: 'Listen to this audio and respond.' },
+                  { type: 'input_audio', input_audio: { data: base64Audio, format: 'wav' } }
+                ]
+              }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'API request failed');
+        }
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = '';
+        let sentenceBuffer = '';
+        let buffer = '';
+        let usage = null;
+        let userTranscript = null;
+        let transcriptExtracted = false;
+
+        setButtonState('speaking');
+        searchToggle.classList.add('hidden');
+        stopBtn.classList.remove('hidden');
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+
+            const data = trimmedLine.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.usage) usage = parsed.usage;
+
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                fullResponse += content;
+
+                // Extract user transcript
+                if (!transcriptExtracted) {
+                  const match = fullResponse.match(/\[USER\]\s*([\s\S]*?)\s*\[\/USER\]/);
+                  if (match) {
+                    userTranscript = match[1].trim();
+                    transcriptExtracted = true;
+                  }
+                }
+
+                // Queue speech for response (after transcript extraction)
+                if (transcriptExtracted) {
+                  const endTagIndex = fullResponse.indexOf('[/USER]');
+                  if (endTagIndex !== -1) {
+                    const responseOnly = fullResponse.slice(endTagIndex + 7);
+                    const prevResponse = fullResponse.slice(0, -content.length);
+                    const prevEndIdx = prevResponse.indexOf('[/USER]');
+                    const prevResponseOnly = prevEndIdx !== -1 ? prevResponse.slice(prevEndIdx + 7) : '';
+
+                    if (responseOnly.length > prevResponseOnly.length) {
+                      sentenceBuffer += responseOnly.slice(prevResponseOnly.length);
+                    }
+                  }
+                }
+
+                // Speak complete sentences
+                const sentenceMatch = sentenceBuffer.match(/^(.*?[.!?])\s*/);
+                if (sentenceMatch) {
+                  const sentence = sentenceMatch[1];
+                  sentenceBuffer = sentenceBuffer.slice(sentenceMatch[0].length);
+                  queueSpeech(sentence);
+                }
+              }
+            } catch (e) {}
+          }
+        }
+
+        // Speak remaining text
+        if (sentenceBuffer.trim()) {
+          queueSpeech(sentenceBuffer.trim());
+        }
+
+        // Update stats from API response
+        if (usage && typeof usage.cost === 'number') {
+          stats.lastCost = usage.cost;
+          stats.totalCost += usage.cost;
+          updateCostDisplay();
+        }
+
+        // Clean response for history
+        let responseOnly = fullResponse;
+        const endTagIndex = fullResponse.indexOf('[/USER]');
+        if (endTagIndex !== -1) {
+          responseOnly = fullResponse.slice(endTagIndex + 7).trim();
+        }
+        const cleanResponse = stripSpeechHints(responseOnly);
+
+        // Save to conversation history
+        conversationHistory.push({ role: 'user', content: userTranscript || '[voice message]' });
+        conversationHistory.push({ role: 'assistant', content: cleanResponse });
+
+      } catch (error) {
+        console.error('API error:', error);
+        showError(error.message);
+        setButtonState('ready');
+        searchToggle.classList.remove('hidden');
+        stopBtn.classList.add('hidden');
+      }
+    }
+
+    // ============ Text Processing ============
+    function stripSpeechHints(text) {
+      return text.replace(/\[\[([^\]]+)\]\]/g, '');
+    }
+
+    function convertToSpeech(text) {
+      const hintRegex = /\[\[([^\]]+)\]\]/g;
+      let result = text;
+      let match;
+      const replacements = [];
+
+      while ((match = hintRegex.exec(result)) !== null) {
+        const hint = match[1];
+        const hintStart = match.index;
+        const hintEnd = hintStart + match[0].length;
+        const hintWordCount = hint.trim().split(/\s+/).length;
+
+        const textBefore = result.slice(0, hintStart).trimEnd();
+        const wordsBefore = textBefore.split(/\s+/);
+        const wordsToReplace = Math.min(hintWordCount, wordsBefore.length);
+        const replaceStart = textBefore.length - wordsBefore.slice(-wordsToReplace).join(' ').length;
+
+        replacements.push({ start: replaceStart, end: hintEnd, replacement: hint });
+      }
+
+      for (let i = replacements.length - 1; i >= 0; i--) {
+        const r = replacements[i];
+        result = result.slice(0, r.start) + r.replacement + result.slice(r.end);
+      }
+
+      return result;
+    }
+
+    function sanitizeForSpeech(text) {
+      let result = convertToSpeech(text);
+      return result
+        .replace(/^#{1,6}\s+/gm, '')
+        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+        .replace(/https?:\/\/[^\s)]+/g, '')
+        .replace(/\*\*([^*]+)\*\*/g, '$1')
+        .replace(/\*([^*]+)\*/g, '$1')
+        .replace(/__([^_]+)__/g, '$1')
+        .replace(/_([^_]+)_/g, '$1')
+        .replace(/```[\s\S]*?```/g, '')
+        .replace(/`([^`]+)`/g, '$1')
+        .replace(/^>\s*/gm, '')
+        .replace(/^[-*+]\s+/gm, ', ')
+        .replace(/^\d+\.\s+/gm, ', ')
+        .replace(/\s+/g, ' ')
+        .trim();
+    }
+
+    // ============ Text-to-Speech ============
+    function queueSpeech(text) {
+      if (!text.trim() || shouldStopSpeaking) return;
+      const sanitized = sanitizeForSpeech(text);
+      if (!sanitized) return;
+      speechQueue.push(sanitized);
+      if (!isSpeaking) processQueue();
+    }
+
+    function processQueue() {
+      if (shouldStopSpeaking || speechQueue.length === 0) {
+        isSpeaking = false;
+        if (speechQueue.length === 0) {
+          setButtonState('ready');
+          searchToggle.classList.remove('hidden');
+          stopBtn.classList.add('hidden');
+        }
+        return;
+      }
+
+      isSpeaking = true;
+      const text = speechQueue.shift();
+
+      if (!window.speechSynthesis) {
+        processQueue();
+        return;
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.rate = 1;
+      utterance.pitch = 1;
+
+      // Select voice
+      const voices = speechSynthesis.getVoices();
+      let voice = null;
+
+      if (selectedVoiceName) {
+        voice = voices.find(v => v.name === selectedVoiceName);
+      }
+
+      if (!voice) {
+        const preferred = [
+          'Google UK English Female', 'Google UK English Male', 'Google US English',
+          'Ava (Premium)', 'Zoe (Premium)', 'Samantha', 'Karen'
+        ];
+        for (const name of preferred) {
+          voice = voices.find(v => v.name.includes(name));
+          if (voice) break;
+        }
+        if (!voice) voice = voices.find(v => v.lang.startsWith('en'));
+      }
+
+      if (voice) utterance.voice = voice;
+
+      utterance.onend = () => processQueue();
+      utterance.onerror = () => processQueue();
+
+      speechSynthesis.speak(utterance);
+    }
+
+    function stopSpeaking() {
+      shouldStopSpeaking = true;
+      speechQueue = [];
+      speechSynthesis.cancel();
+      isSpeaking = false;
+      setButtonState('ready');
+      searchToggle.classList.remove('hidden');
+      stopBtn.classList.add('hidden');
+    }
+
+    // ============ Voice Settings ============
     function populateVoiceList() {
       const voices = speechSynthesis.getVoices();
-      // Filter to English voices only
       const englishVoices = voices.filter(v => v.lang.startsWith('en'));
 
-      // Sort: Google first, then Premium/Enhanced, then alphabetically
       englishVoices.sort((a, b) => {
-        const aIsGoogle = a.name.includes('Google');
-        const bIsGoogle = b.name.includes('Google');
-        if (aIsGoogle && !bIsGoogle) return -1;
-        if (!aIsGoogle && bIsGoogle) return 1;
-
-        const aIsPremium = a.name.includes('Premium') || a.name.includes('Enhanced');
-        const bIsPremium = b.name.includes('Premium') || b.name.includes('Enhanced');
-        if (aIsPremium && !bIsPremium) return -1;
-        if (!aIsPremium && bIsPremium) return 1;
-
+        const aGoogle = a.name.includes('Google');
+        const bGoogle = b.name.includes('Google');
+        if (aGoogle && !bGoogle) return -1;
+        if (!aGoogle && bGoogle) return 1;
+        const aPremium = a.name.includes('Premium') || a.name.includes('Enhanced');
+        const bPremium = b.name.includes('Premium') || b.name.includes('Enhanced');
+        if (aPremium && !bPremium) return -1;
+        if (!aPremium && bPremium) return 1;
         return a.name.localeCompare(b.name);
       });
 
@@ -2090,22 +1423,20 @@ Respond naturally as if having a spoken conversation.`;
         const item = document.createElement('div');
         item.className = `voice-item${isSelected ? ' selected' : ''}`;
         item.innerHTML = `
-          <div class="voice-item-radio"></div>
-          <div class="voice-item-info">
-            <div class="voice-item-name">${voice.name}</div>
-            <div class="voice-item-lang">${voice.lang}</div>
+          <div class="voice-radio"></div>
+          <div class="voice-info">
+            <div class="voice-name">${voice.name}</div>
+            <div class="voice-lang">${voice.lang}</div>
           </div>
-          <button class="voice-item-preview">Preview</button>
+          <button class="voice-preview">Preview</button>
         `;
 
-        // Select voice on click
         item.addEventListener('click', (e) => {
-          if (e.target.classList.contains('voice-item-preview')) return;
+          if (e.target.classList.contains('voice-preview')) return;
           selectVoice(voice.name);
         });
 
-        // Preview button
-        item.querySelector('.voice-item-preview').addEventListener('click', (e) => {
+        item.querySelector('.voice-preview').addEventListener('click', (e) => {
           e.stopPropagation();
           previewVoice(voice);
         });
@@ -2117,20 +1448,16 @@ Respond naturally as if having a spoken conversation.`;
     function selectVoice(voiceName) {
       selectedVoiceName = voiceName;
       localStorage.setItem('selectedVoice', voiceName);
-
-      // Update UI
       document.querySelectorAll('.voice-item').forEach(item => {
-        const name = item.querySelector('.voice-item-name').textContent;
+        const name = item.querySelector('.voice-name').textContent;
         item.classList.toggle('selected', name === voiceName);
       });
     }
 
     function previewVoice(voice) {
       speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(SAMPLE_SENTENCE);
+      const utterance = new SpeechSynthesisUtterance("Hello! I'm your voice assistant.");
       utterance.voice = voice;
-      utterance.rate = 1;
-      utterance.pitch = 1;
       speechSynthesis.speak(utterance);
     }
 
@@ -2144,261 +1471,6 @@ Respond naturally as if having a spoken conversation.`;
       voiceModal.classList.add('hidden');
     }
 
-    function setStatus(state, text) {
-      // Status is now shown through button visual state
-      // This function is kept for compatibility but does nothing
-    }
-
-    function showError(message) {
-      errorToast.textContent = message;
-      errorToast.classList.add('visible');
-      setTimeout(() => errorToast.classList.remove('visible'), 4000);
-    }
-
-    function startListening() {
-      console.log('startListening called');
-
-      // If AI is speaking, interrupt it
-      if (isSpeaking || speechQueue.length > 0) {
-        interruptSpeaking();
-      }
-
-      startGeminiRecording();
-    }
-
-    function interruptSpeaking() {
-      const wasInterrupted = isSpeaking || speechQueue.length > 0;
-
-      shouldStopSpeaking = true;
-      speechQueue = [];
-      speechSynthesis.cancel();
-      isSpeaking = false;
-      searchToggle.classList.remove('hidden');
-      stopSpeechBtn.classList.add('hidden');
-
-      // Update the last assistant message to show only what was spoken
-      if (wasInterrupted && spokenText && fullResponseText && spokenText !== fullResponseText) {
-        const lastAssistantMsg = [...document.querySelectorAll('.message.assistant')].pop();
-        if (lastAssistantMsg) {
-          const messageTextEl = lastAssistantMsg.querySelector('.message-text');
-          // Show what was spoken, plus indication of interruption
-          const interruptedHtml = parseMarkdown(spokenText.trim()) +
-            '<p><em style="color: var(--fg-muted);">[interrupted]</em></p>';
-          messageTextEl.innerHTML = interruptedHtml;
-
-          // Update conversation history with truncated response
-          if (conversationHistory.length > 0 &&
-              conversationHistory[conversationHistory.length - 1].role === 'assistant') {
-            conversationHistory[conversationHistory.length - 1].content =
-              spokenText.trim() + ' [interrupted by user]';
-          }
-        }
-      }
-
-      setStatus('ready', 'Ready');
-    }
-
-    function stopListening() {
-      stopGeminiRecording();
-    }
-
-    function addMessage(role, text) {
-      const messageEl = document.createElement('div');
-      messageEl.className = `message ${role}`;
-      const displayText = role === 'user' ? text : parseMarkdown(text);
-      messageEl.innerHTML = `
-        <div class="message-label">${role === 'user' ? 'You' : 'AI'}</div>
-        <div class="message-text">${displayText}</div>
-      `;
-      transcriptArea.appendChild(messageEl);
-      if (!userHasScrolled) {
-        window.scrollTo(0, document.body.scrollHeight);
-      }
-    }
-
-    // ============ Text Processing ============
-
-    // Strip [[speech hints]] for display - shows the readable text only
-    function stripSpeechHints(text) {
-      return text.replace(/\[\[([^\]]+)\]\]/g, '');
-    }
-
-    // Convert text to speech-friendly version - uses [[hints]] where available
-    function convertToSpeech(text) {
-      // First strip markdown formatting so we can match clean text
-      let result = text
-        .replace(/\*\*([^*]+)\*\*/g, '$1')  // bold
-        .replace(/\*([^*]+)\*/g, '$1')       // italic
-        .replace(/__([^_]+)__/g, '$1')       // bold
-        .replace(/_([^_]+)_/g, '$1');        // italic
-
-      // Process each [[hint]] and replace the appropriate number of preceding words
-      // Work backwards through the string to avoid index shifting issues
-      const hintRegex = /\[\[([^\]]+)\]\]/g;
-      let match;
-      const replacements = [];
-
-      while ((match = hintRegex.exec(result)) !== null) {
-        const hint = match[1];
-        const hintStart = match.index;
-        const hintEnd = hintStart + match[0].length;
-        const hintWordCount = hint.trim().split(/\s+/).length;
-
-        // Find the preceding text (before the [[)
-        const textBefore = result.slice(0, hintStart).trimEnd();
-        const wordsBefore = textBefore.split(/\s+/);
-
-        // Take the last N words where N = hint word count
-        const wordsToReplace = Math.min(hintWordCount, wordsBefore.length);
-        const replaceStart = textBefore.length - wordsBefore.slice(-wordsToReplace).join(' ').length;
-
-        replacements.push({
-          start: replaceStart,
-          end: hintEnd,
-          replacement: hint
-        });
-      }
-
-      // Apply replacements in reverse order
-      for (let i = replacements.length - 1; i >= 0; i--) {
-        const r = replacements[i];
-        result = result.slice(0, r.start) + r.replacement + result.slice(r.end);
-      }
-
-      return result;
-    }
-
-    // ============ Text-to-Speech ============
-    function sanitizeForSpeech(text) {
-      // First, apply speech hints (use spoken versions)
-      let result = convertToSpeech(text);
-
-      return result
-        // Remove markdown headers
-        .replace(/^#{1,6}\s+/gm, '')
-        // Convert markdown links [label](url) to just the label
-        .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
-        // Remove bare URLs
-        .replace(/https?:\/\/[^\s)]+/g, '')
-        // Remove markdown bold/italic
-        .replace(/\*\*([^*]+)\*\*/g, '$1')
-        .replace(/\*([^*]+)\*/g, '$1')
-        .replace(/__([^_]+)__/g, '$1')
-        .replace(/_([^_]+)_/g, '$1')
-        // Remove code blocks
-        .replace(/```[\s\S]*?```/g, '')
-        // Remove inline code backticks
-        .replace(/`([^`]+)`/g, '$1')
-        // Remove blockquotes
-        .replace(/^>\s*/gm, '')
-        // Convert list markers to natural pauses
-        .replace(/^[-*+]\s+/gm, ', ')
-        .replace(/^\d+\.\s+/gm, ', ')
-        // Clean up extra whitespace
-        .replace(/\s+/g, ' ')
-        .trim();
-    }
-
-    function queueSpeech(text) {
-      if (!text.trim() || shouldStopSpeaking) return;
-      const sanitized = sanitizeForSpeech(text);
-      if (!sanitized) return;
-      // Store original text (not sanitized) for tracking what was spoken
-      speechQueue.push({ sanitized, original: text });
-      if (!isSpeaking) {
-        processQueue();
-      }
-    }
-
-    function processQueue() {
-      if (shouldStopSpeaking || speechQueue.length === 0) {
-        isSpeaking = false;
-        if (shouldStopSpeaking || speechQueue.length === 0) {
-          setStatus('ready', 'Ready');
-          searchToggle.classList.remove('hidden');
-          stopSpeechBtn.classList.add('hidden');
-        }
-        return;
-      }
-
-      isSpeaking = true;
-      const item = speechQueue.shift();
-      const text = item.sanitized;
-
-      // Track what's being spoken (using original text for history)
-      spokenText += item.original + ' ';
-
-      if (!window.speechSynthesis) {
-        processQueue();
-        return;
-      }
-
-      const utterance = new SpeechSynthesisUtterance(text);
-      utterance.rate = 1;
-      utterance.pitch = 1;
-
-      // Get the voice to use
-      const voices = speechSynthesis.getVoices();
-      let voice = null;
-
-      // First, try to use the user-selected voice
-      if (selectedVoiceName) {
-        voice = voices.find(v => v.name === selectedVoiceName);
-      }
-
-      // Fallback to auto-selection if no voice selected or not found
-      if (!voice) {
-        const preferredVoiceNames = [
-          // Google voices (best quality in Chrome)
-          'Google UK English Female',
-          'Google UK English Male',
-          'Google US English',
-          // macOS premium voices
-          'Ava (Premium)', 'Zoe (Premium)', 'Karen (Premium)',
-          'Samantha (Enhanced)', 'Karen (Enhanced)',
-          'Ava', 'Zoe', 'Samantha', 'Karen',
-          // Windows natural voices
-          'Microsoft Aria Online (Natural)', 'Microsoft Jenny Online (Natural)',
-        ];
-
-        for (const name of preferredVoiceNames) {
-          voice = voices.find(v => v.name.includes(name));
-          if (voice) break;
-        }
-
-        // Final fallback to any English voice
-        if (!voice) {
-          voice = voices.find(v => v.lang.startsWith('en'));
-        }
-      }
-
-      if (voice) {
-        console.log('Using voice:', voice.name);
-        utterance.voice = voice;
-      }
-
-      utterance.onend = () => {
-        processQueue();
-      };
-
-      utterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event);
-        processQueue();
-      };
-
-      speechSynthesis.speak(utterance);
-    }
-
-    function stopSpeaking() {
-      shouldStopSpeaking = true;
-      speechQueue = [];
-      speechSynthesis.cancel();
-      isSpeaking = false;
-      setStatus('ready', 'Ready');
-      searchToggle.classList.remove('hidden');
-      stopSpeechBtn.classList.add('hidden');
-    }
-
     // ============ Event Listeners ============
     function setupEventListeners() {
       loginBtn.addEventListener('click', startOAuthFlow);
@@ -2406,13 +1478,36 @@ Respond naturally as if having a spoken conversation.`;
         settingsDropdown.classList.remove('open');
         logout();
       });
-      stopSpeechBtn.addEventListener('click', stopSpeaking);
 
-      // Search toggle
-      searchToggle.addEventListener('click', () => {
-        webSearchEnabled = !webSearchEnabled;
-        localStorage.setItem('webSearchEnabled', webSearchEnabled);
-        updateSearchToggleUI();
+      // Main button click
+      mainButton.addEventListener('click', () => {
+        if (isSpeaking || speechQueue.length > 0) {
+          stopSpeaking();
+        }
+        if (isListening) {
+          stopRecording();
+        } else {
+          startRecording();
+        }
+      });
+
+      // Spacebar
+      document.addEventListener('keydown', (e) => {
+        if (!voiceModal.classList.contains('hidden')) return;
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (!apiKey) return;
+
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (isSpeaking || speechQueue.length > 0) {
+            stopSpeaking();
+          }
+          if (isListening) {
+            stopRecording();
+          } else {
+            startRecording();
+          }
+        }
       });
 
       // Settings dropdown menu
@@ -2434,85 +1529,23 @@ Respond naturally as if having a spoken conversation.`;
         openVoiceSettings();
       });
 
+      // Search toggle
+      searchToggle.addEventListener('click', () => {
+        webSearchEnabled = !webSearchEnabled;
+        localStorage.setItem('webSearchEnabled', webSearchEnabled);
+        updateSearchToggleUI();
+      });
+
+      // Stop button
+      stopBtn.addEventListener('click', stopSpeaking);
+
+      // Voice modal
       modalClose.addEventListener('click', closeVoiceSettings);
       voiceModal.addEventListener('click', (e) => {
         if (e.target === voiceModal) closeVoiceSettings();
       });
 
-      // Text input controls
-      textInputBtn.addEventListener('click', openTextInput);
-      textInputClose.addEventListener('click', closeTextInput);
-      textSendBtn.addEventListener('click', () => {
-        sendTextMessage(textInput.value);
-      });
-      textInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter' && !e.shiftKey) {
-          e.preventDefault();
-          sendTextMessage(textInput.value);
-        }
-        if (e.key === 'Escape') {
-          closeTextInput();
-        }
-      });
-
-      // Spacebar to start/stop listening
-      document.addEventListener('keydown', (e) => {
-        // Ignore if modal is open or if typing in an input
-        if (!voiceModal.classList.contains('hidden')) return;
-        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
-        if (!apiKey) return; // Not logged in
-
-        if (e.code === 'Space') {
-          e.preventDefault();
-          if (isListening) {
-            stopListening();
-          } else {
-            startListening();
-          }
-        }
-      });
-
-      // Detect user scroll to disable auto-scroll (now on window since page scrolls)
-      window.addEventListener('scroll', () => {
-        const isAtBottom = window.innerHeight + window.scrollY >= document.body.scrollHeight - 100;
-
-        // If user scrolled up (away from bottom), disable auto-scroll
-        if (!isAtBottom && window.scrollY < lastScrollTop) {
-          userHasScrolled = true;
-        }
-
-        // If user scrolled back to bottom, re-enable auto-scroll
-        if (isAtBottom) {
-          userHasScrolled = false;
-        }
-
-        lastScrollTop = window.scrollY;
-      });
-
-      controlBtn.addEventListener('click', (e) => {
-        e.preventDefault();
-        console.log('Control button clicked, isListening:', isListening);
-
-        if (controlBtn.classList.contains('disabled')) {
-          console.log('Button is disabled');
-          return;
-        }
-
-        if (isListening) {
-          stopListening();
-        } else {
-          startListening();
-        }
-      });
-
-      // Also handle touch for mobile
-      controlBtn.addEventListener('touchend', (e) => {
-        e.preventDefault();
-        console.log('Control button touched');
-        controlBtn.click();
-      });
-
-      // Ensure voices are loaded
+      // Load voices
       if (speechSynthesis.onvoiceschanged !== undefined) {
         speechSynthesis.onvoiceschanged = () => speechSynthesis.getVoices();
       }
