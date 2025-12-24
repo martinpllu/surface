@@ -511,6 +511,53 @@
       z-index: 10;
     }
 
+    /* Cost Display */
+    .cost-display {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      font-size: 0.6rem;
+      font-weight: 500;
+      letter-spacing: 0.03em;
+      color: var(--fg-muted);
+      z-index: 10;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .cost-display.hidden {
+      display: none;
+    }
+
+    .cost-row {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .cost-label {
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      opacity: 0.7;
+    }
+
+    .cost-value {
+      color: var(--fg);
+      font-weight: 600;
+    }
+
+    .cost-value.highlight {
+      color: var(--accent);
+      animation: costPulse 0.6s ease-out;
+    }
+
+    @keyframes costPulse {
+      0% { transform: scale(1.15); }
+      100% { transform: scale(1); }
+    }
+
     /* Modal */
     .modal-overlay {
       position: fixed;
@@ -690,7 +737,7 @@
 <body>
   <button class="logout-btn hidden" id="logoutBtn">Logout</button>
   <button class="settings-btn hidden" id="settingsBtn">Voice</button>
-  <span class="version">v5</span>
+  <span class="version">v6</span>
 
   <!-- Voice Settings Modal -->
   <div class="modal-overlay hidden" id="voiceModal">
@@ -748,7 +795,19 @@
     </div>
   </div>
 
-  <div class="error-toast" id="errorToast"></div>
+    <div class="error-toast" id="errorToast"></div>
+
+  <!-- Cost Display -->
+  <div class="cost-display hidden" id="costDisplay">
+    <div class="cost-row">
+      <span class="cost-label">Last</span>
+      <span class="cost-value" id="costLast">$0.000000</span>
+    </div>
+    <div class="cost-row">
+      <span class="cost-label">Total</span>
+      <span class="cost-value" id="costTotal">$0.000000</span>
+    </div>
+  </div>
 
   <script>
     // ============ Configuration ============
@@ -775,10 +834,13 @@
 
     // ============ State ============
     let apiKey = localStorage.getItem('openrouter_api_key');
-    let recognition = null;
     let isListening = false;
-    let currentTranscript = '';
     let conversationHistory = [];
+
+    // Audio recording state
+    let mediaRecorder = null;
+    let audioChunks = [];
+    let audioStream = null;
 
     // ============ DOM Elements ============
     const loginScreen = document.getElementById('loginScreen');
@@ -796,6 +858,9 @@
     const transcriptArea = document.getElementById('transcriptArea');
     const waveform = document.getElementById('waveform');
     const errorToast = document.getElementById('errorToast');
+    const costDisplay = document.getElementById('costDisplay');
+    const costLast = document.getElementById('costLast');
+    const costTotal = document.getElementById('costTotal');
 
     // Selected voice (stored in localStorage)
     let selectedVoiceName = localStorage.getItem('selectedVoice') || null;
@@ -847,6 +912,22 @@
       console.log(`     Cost: $${stats.totalCost.toFixed(6)}`);
       console.log(`     Latency (min/avg/max): ${minLatency}ms / ${Math.round(avgLatency)}ms / ${maxLatency}ms`);
       console.log(`     Requests: ${latencies.length}`);
+
+      // Update UI
+      updateCostDisplay();
+    }
+
+    function updateCostDisplay() {
+      costDisplay.classList.remove('hidden');
+
+      // Update last cost with highlight animation
+      costLast.textContent = `$${stats.lastResponse.cost.toFixed(6)}`;
+      costLast.classList.remove('highlight');
+      void costLast.offsetWidth; // Trigger reflow to restart animation
+      costLast.classList.add('highlight');
+
+      // Update total cost
+      costTotal.textContent = `$${stats.totalCost.toFixed(6)}`;
     }
 
     function updateStats(usage, latencyMs) {
@@ -1018,6 +1099,330 @@
       }
 
       return summary;
+    }
+
+    // ============ Gemini Audio Recording ============
+    async function startGeminiRecording() {
+      try {
+        audioChunks = [];
+        audioStream = await navigator.mediaDevices.getUserMedia({ audio: true });
+
+        // Try mp4/aac first (Safari), then webm (Chrome/Firefox)
+        // We'll convert to WAV before sending since Gemini supports wav but not webm
+        let mimeType = 'audio/webm';
+        if (MediaRecorder.isTypeSupported('audio/mp4')) {
+          mimeType = 'audio/mp4';
+        } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+          mimeType = 'audio/webm;codecs=opus';
+        }
+        console.log('Recording with mimeType:', mimeType);
+
+        mediaRecorder = new MediaRecorder(audioStream, { mimeType });
+
+        mediaRecorder.ondataavailable = (event) => {
+          if (event.data.size > 0) {
+            audioChunks.push(event.data);
+          }
+        };
+
+        mediaRecorder.onstop = async () => {
+          const audioBlob = new Blob(audioChunks, { type: mimeType });
+          console.log('Audio recorded:', audioBlob.size, 'bytes, type:', mimeType);
+
+          // Stop all tracks
+          audioStream.getTracks().forEach(track => track.stop());
+          audioStream = null;
+
+          // Convert to WAV format (which Gemini supports)
+          try {
+            const wavBlob = await convertToWav(audioBlob);
+            console.log('Converted to WAV:', wavBlob.size, 'bytes');
+            const base64Audio = await blobToBase64(wavBlob);
+            await sendAudioToGemini(base64Audio, 'wav');
+          } catch (e) {
+            console.error('Audio conversion error:', e);
+            showError('Failed to process audio');
+            setStatus('ready', 'Ready');
+          }
+        };
+
+        mediaRecorder.start();
+        console.log('Gemini recording started');
+
+        isListening = true;
+        controlBtn.classList.add('listening');
+        waveform.classList.add('active');
+        setStatus('listening', 'Recording...');
+
+      } catch (error) {
+        console.error('Error starting Gemini recording:', error);
+        showError('Microphone access denied');
+        setStatus('ready', 'Ready');
+      }
+    }
+
+    function stopGeminiRecording() {
+      if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+        mediaRecorder.stop();
+        console.log('Gemini recording stopped');
+      }
+
+      isListening = false;
+      controlBtn.classList.remove('listening');
+      waveform.classList.remove('active');
+      setStatus('processing', 'Processing audio...');
+    }
+
+    function blobToBase64(blob) {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onloadend = () => {
+          // Remove the data URL prefix (e.g., "data:audio/webm;base64,")
+          const base64 = reader.result.split(',')[1];
+          resolve(base64);
+        };
+        reader.onerror = reject;
+        reader.readAsDataURL(blob);
+      });
+    }
+
+    async function convertToWav(audioBlob) {
+      const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+      const arrayBuffer = await audioBlob.arrayBuffer();
+      const audioBuffer = await audioContext.decodeAudioData(arrayBuffer);
+
+      // Convert to WAV
+      const wavBuffer = audioBufferToWav(audioBuffer);
+      return new Blob([wavBuffer], { type: 'audio/wav' });
+    }
+
+    function audioBufferToWav(buffer) {
+      const numChannels = buffer.numberOfChannels;
+      const sampleRate = buffer.sampleRate;
+      const format = 1; // PCM
+      const bitDepth = 16;
+
+      // Interleave channels
+      let interleaved;
+      if (numChannels === 2) {
+        const left = buffer.getChannelData(0);
+        const right = buffer.getChannelData(1);
+        interleaved = new Float32Array(left.length + right.length);
+        for (let i = 0, j = 0; i < left.length; i++, j += 2) {
+          interleaved[j] = left[i];
+          interleaved[j + 1] = right[i];
+        }
+      } else {
+        interleaved = buffer.getChannelData(0);
+      }
+
+      // Create WAV file
+      const dataLength = interleaved.length * (bitDepth / 8);
+      const wavBuffer = new ArrayBuffer(44 + dataLength);
+      const view = new DataView(wavBuffer);
+
+      // WAV header
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + dataLength, true);
+      writeString(view, 8, 'WAVE');
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true); // fmt chunk size
+      view.setUint16(20, format, true);
+      view.setUint16(22, numChannels, true);
+      view.setUint32(24, sampleRate, true);
+      view.setUint32(28, sampleRate * numChannels * (bitDepth / 8), true);
+      view.setUint16(32, numChannels * (bitDepth / 8), true);
+      view.setUint16(34, bitDepth, true);
+      writeString(view, 36, 'data');
+      view.setUint32(40, dataLength, true);
+
+      // Write audio data
+      const offset = 44;
+      for (let i = 0; i < interleaved.length; i++) {
+        const sample = Math.max(-1, Math.min(1, interleaved[i]));
+        const intSample = sample < 0 ? sample * 0x8000 : sample * 0x7FFF;
+        view.setInt16(offset + i * 2, intSample, true);
+      }
+
+      return wavBuffer;
+    }
+
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+
+    async function sendAudioToGemini(base64Audio, format) {
+      const requestStartTime = performance.now();
+
+      // Reset speech state
+      shouldStopSpeaking = false;
+      speechQueue = [];
+      spokenText = '';
+      fullResponseText = '';
+
+      try {
+        const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${apiKey}`,
+            'Content-Type': 'application/json',
+            'HTTP-Referer': window.location.origin,
+            'X-Title': 'Voice Chat'
+          },
+          body: JSON.stringify({
+            model: MODEL,
+            stream: true,
+            messages: [
+              {
+                role: 'system',
+                content: buildSystemPrompt()
+              },
+              ...conversationHistory,
+              {
+                role: 'user',
+                content: [
+                  {
+                    type: 'text',
+                    text: 'Please listen to this audio and respond to what the user is saying.'
+                  },
+                  {
+                    type: 'input_audio',
+                    input_audio: {
+                      data: base64Audio,
+                      format: format
+                    }
+                  }
+                ]
+              }
+            ]
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'API request failed');
+        }
+
+        // Add placeholder user message (we don't have transcript in this mode)
+        const userMessageEl = document.createElement('div');
+        userMessageEl.className = 'message user';
+        userMessageEl.innerHTML = `
+          <div class="message-label">You</div>
+          <div class="message-text" style="color: var(--fg-muted); font-style: italic;">[voice message]</div>
+        `;
+        transcriptArea.appendChild(userMessageEl);
+
+        // Create message element for streaming response
+        const messageEl = document.createElement('div');
+        messageEl.className = 'message assistant';
+        messageEl.innerHTML = `
+          <div class="message-label">AI</div>
+          <div class="message-text"></div>
+        `;
+        transcriptArea.appendChild(messageEl);
+        const messageTextEl = messageEl.querySelector('.message-text');
+
+        // Process stream (same as regular sendMessage)
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let fullResponse = '';
+        let sentenceBuffer = '';
+        let buffer = '';
+        let usage = null;
+
+        setStatus('speaking', 'Speaking...');
+        stopSpeechBtn.classList.remove('hidden');
+        userHasScrolled = false;
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          const chunk = decoder.decode(value, { stream: true });
+          buffer += chunk;
+
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || '';
+
+          for (const line of lines) {
+            const trimmedLine = line.trim();
+            if (!trimmedLine || !trimmedLine.startsWith('data: ')) continue;
+
+            const data = trimmedLine.slice(6);
+            if (data === '[DONE]') continue;
+
+            try {
+              const parsed = JSON.parse(data);
+              if (parsed.usage) {
+                usage = parsed.usage;
+              }
+              const content = parsed.choices?.[0]?.delta?.content;
+              if (content) {
+                fullResponse += content;
+                fullResponseText = fullResponse;
+                sentenceBuffer += content;
+                messageTextEl.innerHTML = parseMarkdown(stripNoteActions(fullResponse));
+
+                if (!userHasScrolled) {
+                  transcriptArea.scrollTop = transcriptArea.scrollHeight;
+                }
+
+                // Speak sentences
+                if (!sentenceBuffer.includes('<note-action>') || sentenceBuffer.includes('</note-action>')) {
+                  const cleanBuffer = stripNoteActions(sentenceBuffer);
+                  const sentenceMatch = cleanBuffer.match(/^(.*?[.!?])\s*/);
+                  if (sentenceMatch) {
+                    const sentence = sentenceMatch[1];
+                    sentenceBuffer = sentenceBuffer.slice(sentenceBuffer.indexOf(sentenceMatch[0]) + sentenceMatch[0].length);
+                    queueSpeech(sentence);
+                  }
+                }
+              }
+            } catch (e) {
+              // Parse error, skip
+            }
+          }
+        }
+
+        // Speak remaining
+        const remainingToSpeak = stripNoteActions(sentenceBuffer.trim());
+        if (remainingToSpeak) {
+          queueSpeech(remainingToSpeak);
+        }
+
+        // Log stats
+        const latencyMs = Math.round(performance.now() - requestStartTime);
+        updateStats(usage, latencyMs);
+
+        // Parse and handle note actions
+        const actions = parseNoteActions(fullResponse);
+        const cleanResponse = stripNoteActions(fullResponse);
+        messageTextEl.innerHTML = parseMarkdown(cleanResponse);
+
+        // Handle read actions
+        const readAction = actions.find(a => a.action === 'read');
+        if (readAction) {
+          const notes = queryNotes(readAction.filter || {});
+          // For Gemini audio mode, we add a placeholder to conversation history
+          conversationHistory.push({ role: 'user', content: '[voice message]' });
+          await continueWithNotes(notes, cleanResponse, messageEl);
+        } else {
+          for (const action of actions) {
+            executeNoteAction(action);
+          }
+          // Add to conversation history
+          conversationHistory.push({ role: 'user', content: '[voice message]' });
+          conversationHistory.push({ role: 'assistant', content: cleanResponse });
+        }
+
+      } catch (error) {
+        console.error('Gemini audio API error:', error);
+        showError(error.message);
+        setStatus('ready', 'Ready');
+        stopSpeechBtn.classList.add('hidden');
+      }
     }
 
     // ============ Note Action Parsing ============
@@ -1201,7 +1606,6 @@ Respond naturally as if having a spoken conversation.`;
       }
 
       setupEventListeners();
-      setupSpeechRecognition();
     }
 
     // ============ OAuth Flow ============
@@ -1398,113 +1802,15 @@ Respond naturally as if having a spoken conversation.`;
       setTimeout(() => errorToast.classList.remove('visible'), 4000);
     }
 
-    // ============ Speech Recognition ============
-    function setupSpeechRecognition() {
-      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-      if (!SpeechRecognition) {
-        showError('Speech recognition not supported in this browser');
-        return;
-      }
-
-      recognition = new SpeechRecognition();
-      // Continuous mode causes duplication issues on Android
-      const isMobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-      recognition.continuous = !isMobile;
-      recognition.interimResults = true;
-      recognition.lang = 'en-US';
-      console.log('Speech recognition setup, continuous:', recognition.continuous, 'mobile:', isMobile);
-
-      recognition.onstart = () => {
-        console.log('Recognition started');
-        isListening = true;
-        currentTranscript = '';
-        controlBtn.classList.add('listening');
-        waveform.classList.add('active');
-        setStatus('listening', 'Listening...');
-      };
-
-      recognition.onaudiostart = () => {
-        console.log('Audio capture started');
-        setStatus('listening', 'Hearing audio...');
-      };
-
-      recognition.onsoundstart = () => {
-        console.log('Sound detected');
-      };
-
-      recognition.onspeechstart = () => {
-        console.log('Speech detected');
-        setStatus('listening', 'Speech detected...');
-      };
-
-      recognition.onend = () => {
-        if (isListening) {
-          // Restart if we're still supposed to be listening
-          recognition.start();
-        }
-      };
-
-      recognition.onresult = (event) => {
-        // On Android/mobile, results work differently than desktop
-        // Each result at index i is a separate phrase/segment
-        // We need to build transcript from all results, but only take
-        // the best alternative [0] from each
-
-        let transcript = '';
-
-        for (let i = 0; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
-        }
-
-        currentTranscript = transcript;
-        console.log('Transcript:', currentTranscript, 'Results:', event.results.length);
-        updateInterimDisplay(currentTranscript);
-      };
-
-      recognition.onerror = (event) => {
-        if (event.error === 'no-speech') return;
-        if (event.error === 'aborted') return;
-
-        console.error('Speech recognition error:', event.error);
-
-        // Stop retrying on permission errors
-        if (event.error === 'not-allowed') {
-          isListening = false;
-          controlBtn.classList.remove('listening');
-          waveform.classList.remove('active');
-          showError('Microphone access denied. Please allow microphone access and try again.');
-          setStatus('ready', 'Ready');
-          return;
-        }
-
-        showError(`Speech error: ${event.error}`);
-      };
-    }
-
     function startListening() {
-      console.log('startListening called, recognition:', !!recognition);
-
-      if (!recognition) {
-        showError('Speech recognition not available');
-        return;
-      }
+      console.log('startListening called');
 
       // If AI is speaking, interrupt it
       if (isSpeaking || speechQueue.length > 0) {
         interruptSpeaking();
       }
 
-      isListening = true;
-      currentTranscript = '';
-
-      try {
-        recognition.start();
-        console.log('recognition.start() called');
-      } catch (e) {
-        console.error('Error starting recognition:', e);
-        showError('Error starting speech recognition: ' + e.message);
-      }
+      startGeminiRecording();
     }
 
     function interruptSpeaking() {
@@ -1539,238 +1845,10 @@ Respond naturally as if having a spoken conversation.`;
     }
 
     function stopListening() {
-      isListening = false;
-      controlBtn.classList.remove('listening');
-      waveform.classList.remove('active');
-
-      if (recognition) {
-        recognition.stop();
-      }
-
-      // Wait a short moment for final transcript to arrive
-      setTimeout(() => {
-        // Clear interim display
-        const interimEl = document.querySelector('.message.interim');
-        if (interimEl) interimEl.remove();
-
-        if (currentTranscript.trim()) {
-          sendMessage(currentTranscript.trim());
-        } else {
-          setStatus('ready', 'Ready');
-        }
-      }, 300);
-    }
-
-    function updateInterimDisplay(text) {
-      let interimEl = document.querySelector('.message.interim');
-
-      if (!interimEl) {
-        interimEl = document.createElement('div');
-        interimEl.className = 'message interim';
-        interimEl.innerHTML = `
-          <div class="message-label">You</div>
-          <div class="message-text"></div>
-        `;
-        transcriptArea.appendChild(interimEl);
-      }
-
-      interimEl.querySelector('.message-text').textContent = text;
-      transcriptArea.scrollTop = transcriptArea.scrollHeight;
+      stopGeminiRecording();
     }
 
     // ============ Chat API ============
-    async function sendMessage(text) {
-      setStatus('processing', 'Thinking...');
-
-      // Add user message to display
-      addMessage('user', text);
-
-      // Add to conversation history
-      conversationHistory.push({ role: 'user', content: text });
-
-      // Reset speech state
-      shouldStopSpeaking = false;
-      speechQueue = [];
-      spokenText = '';
-      fullResponseText = '';
-
-      // Track timing
-      const requestStartTime = performance.now();
-
-      try {
-        const response = await fetch(`${OPENROUTER_API_URL}/chat/completions`, {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${apiKey}`,
-            'Content-Type': 'application/json',
-            'HTTP-Referer': window.location.origin,
-            'X-Title': 'Voice Chat'
-          },
-          body: JSON.stringify({
-            model: selectModel(text),
-            stream: true,
-            messages: [
-              {
-                role: 'system',
-                content: buildSystemPrompt()
-              },
-              ...conversationHistory
-            ]
-          })
-        });
-
-        if (!response.ok) {
-          const error = await response.json();
-          throw new Error(error.error?.message || 'API request failed');
-        }
-
-        // Create message element for streaming
-        const messageEl = document.createElement('div');
-        messageEl.className = 'message assistant';
-        messageEl.innerHTML = `
-          <div class="message-label">AI</div>
-          <div class="message-text"></div>
-        `;
-        transcriptArea.appendChild(messageEl);
-        const messageTextEl = messageEl.querySelector('.message-text');
-
-        // Process stream
-        const reader = response.body.getReader();
-        const decoder = new TextDecoder();
-        let fullResponse = '';
-        let sentenceBuffer = '';
-        let buffer = '';
-        let usage = null;
-
-        setStatus('speaking', 'Speaking...');
-        stopSpeechBtn.classList.remove('hidden');
-
-        // Reset scroll state for new response
-        userHasScrolled = false;
-
-        console.log('Starting stream read...');
-
-        while (true) {
-          const { done, value } = await reader.read();
-          if (done) {
-            console.log('Stream done');
-            break;
-          }
-
-          const chunk = decoder.decode(value, { stream: true });
-          console.log('Raw chunk:', chunk.substring(0, 100));
-          buffer += chunk;
-
-          // Process complete lines from buffer
-          const lines = buffer.split('\n');
-          buffer = lines.pop() || ''; // Keep incomplete line in buffer
-
-          for (const line of lines) {
-            const trimmedLine = line.trim();
-            if (!trimmedLine) continue;
-            if (!trimmedLine.startsWith('data: ')) continue;
-
-            const data = trimmedLine.slice(6);
-            if (data === '[DONE]') continue;
-
-            try {
-              const parsed = JSON.parse(data);
-              // Capture usage from final chunk
-              if (parsed.usage) {
-                usage = parsed.usage;
-              }
-              const content = parsed.choices?.[0]?.delta?.content;
-              if (content) {
-                console.log('Content chunk:', content);
-                fullResponse += content;
-                fullResponseText = fullResponse; // Track for interruption
-                sentenceBuffer += content;
-                // Display without note-action tags
-                messageTextEl.innerHTML = parseMarkdown(stripNoteActions(fullResponse));
-
-                // Auto-scroll unless user has scrolled up
-                if (!userHasScrolled) {
-                  transcriptArea.scrollTop = transcriptArea.scrollHeight;
-                }
-
-                // Check for sentence boundaries to speak
-                // Don't speak if we're in the middle of a note-action tag
-                if (!sentenceBuffer.includes('<note-action>') || sentenceBuffer.includes('</note-action>')) {
-                  const cleanBuffer = stripNoteActions(sentenceBuffer);
-                  const sentenceMatch = cleanBuffer.match(/^(.*?[.!?])\s*/);
-                  if (sentenceMatch) {
-                    const sentence = sentenceMatch[1];
-                    // Find where this sentence ends in the original buffer
-                    const strippedSoFar = stripNoteActions(sentenceBuffer.substring(0, sentenceBuffer.length));
-                    if (strippedSoFar.startsWith(sentence)) {
-                      // Find the actual end position accounting for stripped tags
-                      let consumed = 0;
-                      let cleanConsumed = 0;
-                      while (cleanConsumed < sentenceMatch[0].length && consumed < sentenceBuffer.length) {
-                        if (sentenceBuffer.substring(consumed).startsWith('<note-action>')) {
-                          const endTag = sentenceBuffer.indexOf('</note-action>', consumed);
-                          if (endTag !== -1) {
-                            consumed = endTag + '</note-action>'.length;
-                          } else {
-                            break;
-                          }
-                        } else {
-                          consumed++;
-                          cleanConsumed++;
-                        }
-                      }
-                      sentenceBuffer = sentenceBuffer.slice(consumed);
-                      queueSpeech(sentence);
-                    }
-                  }
-                }
-              }
-            } catch (e) {
-              console.log('Parse error for:', data.substring(0, 50), e.message);
-            }
-          }
-        }
-
-        // Speak any remaining text (but strip note actions first)
-        const remainingToSpeak = stripNoteActions(sentenceBuffer.trim());
-        if (remainingToSpeak) {
-          queueSpeech(remainingToSpeak);
-        }
-
-        // Log stats
-        const latencyMs = Math.round(performance.now() - requestStartTime);
-        updateStats(usage, latencyMs);
-
-        // Parse and handle note actions
-        const actions = parseNoteActions(fullResponse);
-        const cleanResponse = stripNoteActions(fullResponse);
-
-        // Update display with clean response (no action tags)
-        messageTextEl.innerHTML = parseMarkdown(cleanResponse);
-
-        // Check for read actions - need follow-up API call
-        const readAction = actions.find(a => a.action === 'read');
-        if (readAction) {
-          console.log('Read action detected, making follow-up call');
-          const notes = queryNotes(readAction.filter || {});
-          await continueWithNotes(notes, cleanResponse, messageEl);
-        } else {
-          // Execute non-read actions
-          for (const action of actions) {
-            executeNoteAction(action);
-          }
-          // Add to history with clean response
-          conversationHistory.push({ role: 'assistant', content: cleanResponse });
-        }
-
-      } catch (error) {
-        console.error('API error:', error);
-        showError(error.message);
-        setStatus('ready', 'Ready');
-        stopSpeechBtn.classList.add('hidden');
-      }
-    }
-
     async function continueWithNotes(notes, previousResponse, messageEl) {
       const messageTextEl = messageEl.querySelector('.message-text');
       const notesData = formatNotesForAI(notes);
