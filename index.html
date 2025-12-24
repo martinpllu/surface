@@ -1305,14 +1305,15 @@
           throw new Error(error.error?.message || 'API request failed');
         }
 
-        // Add placeholder user message (we don't have transcript in this mode)
+        // Add placeholder user message (will be updated with transcription)
         const userMessageEl = document.createElement('div');
         userMessageEl.className = 'message user';
         userMessageEl.innerHTML = `
           <div class="message-label">You</div>
-          <div class="message-text" style="color: var(--fg-muted); font-style: italic;">[voice message]</div>
+          <div class="message-text" style="color: var(--fg-muted); font-style: italic;">[listening...]</div>
         `;
         transcriptArea.appendChild(userMessageEl);
+        const userMessageTextEl = userMessageEl.querySelector('.message-text');
 
         // Create message element for streaming response
         const messageEl = document.createElement('div');
@@ -1331,6 +1332,8 @@
         let sentenceBuffer = '';
         let buffer = '';
         let usage = null;
+        let userTranscript = null;
+        let transcriptExtracted = false;
 
         setStatus('speaking', 'Speaking...');
         stopSpeechBtn.classList.remove('hidden');
@@ -1362,14 +1365,55 @@
               if (content) {
                 fullResponse += content;
                 fullResponseText = fullResponse;
-                sentenceBuffer += content;
-                messageTextEl.innerHTML = parseMarkdown(stripNoteActions(fullResponse));
+
+                // Try to extract user transcript from [USER]...[/USER] tags
+                if (!transcriptExtracted) {
+                  const transcriptMatch = fullResponse.match(/\[USER\]\s*([\s\S]*?)\s*\[\/USER\]/);
+                  if (transcriptMatch) {
+                    userTranscript = transcriptMatch[1].trim();
+                    transcriptExtracted = true;
+                    // Update user message with transcript
+                    userMessageTextEl.style.color = '';
+                    userMessageTextEl.style.fontStyle = '';
+                    userMessageTextEl.textContent = userTranscript;
+                  }
+                }
+
+                // Display only the response part (after [/USER] tag, or full response if no tags)
+                let displayResponse = fullResponse;
+                if (transcriptExtracted) {
+                  const endTagIndex = fullResponse.indexOf('[/USER]');
+                  if (endTagIndex !== -1) {
+                    displayResponse = fullResponse.slice(endTagIndex + 7).trim();
+                  }
+                }
+
+                // Only add to sentence buffer the response part (not transcript)
+                // Don't speak anything until we've extracted the transcript
+                if (transcriptExtracted) {
+                  const endTagIndex = fullResponse.indexOf('[/USER]');
+                  if (endTagIndex !== -1) {
+                    const responseOnly = fullResponse.slice(endTagIndex + 7);
+                    // Calculate what's new since last time
+                    const prevFullResponse = fullResponse.slice(0, -content.length);
+                    const prevEndTagIndex = prevFullResponse.indexOf('[/USER]');
+                    const prevResponseOnly = prevEndTagIndex !== -1
+                      ? prevFullResponse.slice(prevEndTagIndex + 7)
+                      : '';
+                    if (responseOnly.length > prevResponseOnly.length) {
+                      sentenceBuffer += responseOnly.slice(prevResponseOnly.length);
+                    }
+                  }
+                }
+                // If transcript not yet extracted, don't add to sentence buffer at all
+
+                messageTextEl.innerHTML = parseMarkdown(stripNoteActions(displayResponse));
 
                 if (!userHasScrolled) {
                   transcriptArea.scrollTop = transcriptArea.scrollHeight;
                 }
 
-                // Speak sentences
+                // Speak sentences (only from response, not transcript)
                 if (!sentenceBuffer.includes('<note-action>') || sentenceBuffer.includes('</note-action>')) {
                   const cleanBuffer = stripNoteActions(sentenceBuffer);
                   const sentenceMatch = cleanBuffer.match(/^(.*?[.!?])\s*/);
@@ -1397,23 +1441,31 @@
         updateStats(usage, latencyMs);
 
         // Parse and handle note actions
-        const actions = parseNoteActions(fullResponse);
-        const cleanResponse = stripNoteActions(fullResponse);
+        // First strip the [USER]...[/USER] transcript tags, then note actions
+        let responseOnly = fullResponse;
+        const endTagIndex = fullResponse.indexOf('[/USER]');
+        if (endTagIndex !== -1) {
+          responseOnly = fullResponse.slice(endTagIndex + 7).trim();
+        }
+        const actions = parseNoteActions(responseOnly);
+        const cleanResponse = stripNoteActions(responseOnly);
         messageTextEl.innerHTML = parseMarkdown(cleanResponse);
+
+        // Use actual transcript in conversation history if we have it
+        const userContent = userTranscript || '[voice message]';
 
         // Handle read actions
         const readAction = actions.find(a => a.action === 'read');
         if (readAction) {
           const notes = queryNotes(readAction.filter || {});
-          // For Gemini audio mode, we add a placeholder to conversation history
-          conversationHistory.push({ role: 'user', content: '[voice message]' });
+          conversationHistory.push({ role: 'user', content: userContent });
           await continueWithNotes(notes, cleanResponse, messageEl);
         } else {
           for (const action of actions) {
             executeNoteAction(action);
           }
           // Add to conversation history
-          conversationHistory.push({ role: 'user', content: '[voice message]' });
+          conversationHistory.push({ role: 'user', content: userContent });
           conversationHistory.push({ role: 'assistant', content: cleanResponse });
         }
 
@@ -1506,7 +1558,15 @@
 
       return `You are a helpful voice assistant running in voice mode. Today is ${today}.
 
-INPUT: The user's speech is converted to text via speech-to-text, so expect occasional transcription errors, mishearings, or unclear words. If something doesn't make sense, politely ask the user to repeat or confirm.
+INPUT: You receive audio directly from the user's microphone. You MUST transcribe what the user said and include it at the start of your response using this exact format:
+
+[USER]
+<transcription of what the user said>
+[/USER]
+
+Then provide your response after the closing tag. This transcription helps the user see what you heard. If the audio is unclear or silent, still include the tags with a note like "(unclear audio)" or "(no speech detected)".
+
+Expect occasional background noise or unclear speech. If something doesn't make sense, politely ask the user to repeat or confirm.
 
 OUTPUT: Your responses will be converted to speech via text-to-speech. Therefore:
 - Keep responses concise and conversational
